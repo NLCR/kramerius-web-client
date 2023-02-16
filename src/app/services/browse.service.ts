@@ -198,10 +198,12 @@ export class BrowseService {
         } else if (this.getCategory() === 'doctypes') {
             const filteredResults = [];
             for (const item of this.backupResults) {
+              if(item['value']!="monographunit") {
                 item['name'] = this.translate.instant('model_plural.' + item['value']);
                 if (!this.getText() || item['name'].toLowerCase().indexOf(this.getText().toLowerCase()) >= 0) {
                     filteredResults.push(item);
                 }
+              }
             }
             this.results = filteredResults;
             this.numberOfResults = this.results.length;
