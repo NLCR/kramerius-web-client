@@ -10,9 +10,8 @@
     </div>
 
     <div class="app-card-content">
-      <div *ngIf="item.title" class="app-card-title">
-        {{ getTitle() }}
-      </div>
+      <div *ngIf="this.item.title && this.item.title.length>70" class="app-card-title" title="{{this.getTitle()}}" [innerHtml]="this.getTitle()"></div>
+      <div *ngIf="this.item.title && this.item.title.length<=70" class="app-card-title" [innerHtml]="this.getTitle()"></div>
       <div *ngIf="item.authors && item.authors.length > 0" class="app-card-authors">
         <!-- <mat-icon>person</mat-icon> -->
         {{item.authors[0]}}
