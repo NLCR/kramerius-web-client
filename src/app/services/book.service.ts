@@ -123,7 +123,7 @@ export class BookService {
             this.sources = item.sources;
             if (this.sources && this.sources.length > 0) {
                 if (params.source && item.sources.indexOf(params.source) >= 0) {
-                    this.source = params.source;            
+                    this.source = params.source;
                 } else {
                     this.source = this.sources[0];
                 }
@@ -135,9 +135,9 @@ export class BookService {
                 const issueUuid = item.getUuidFromContext('periodicalitem');
                 if (issueUuid) {
                     this.history.removeCurrent();
-                    let p = { 
-                        article: params.uuid, 
-                        fulltext: this.fulltextQuery 
+                    let p = {
+                        article: params.uuid,
+                        fulltext: this.fulltextQuery
                     };
                     if (params.pageUuid && params.pageUuid.indexOf('@') > 0) {
                         const idx = params.pageUuid.substring(params.pageUuid.indexOf('@') + 1);
@@ -146,7 +146,7 @@ export class BookService {
                     this.router.navigate(['/view', issueUuid], { replaceUrl: true, queryParams: p });
                 }
                 return;
-            } 
+            }
             if (item.doctype === 'internalpart') {
                 const parentUuid = item.getParentUuid();
                 if (parentUuid) {
@@ -480,7 +480,7 @@ export class BookService {
                     pages.push(p);
                 } else if (p['model'] === 'article') {
                     pages.push(p);
-                } 
+                }
             }
             this.addParentPages(pages, parents, doctype, params);
         });
@@ -842,10 +842,12 @@ export class BookService {
                     window.open(this.iiif.getIiifImage(this.api.getIiifBaseUrl(this.getRightPage().uuid)), '_blank');
                 }
             } else {
-                window.open(this.api.getFullJpegUrl(this.id(this.getPage().uuid)), '_blank');
-                if (this.getRightPage()) {
-                    window.open(this.api.getFullJpegUrl(this.id(this.getRightPage().uuid)), '_blank');
-                }
+                if(this.settings.downloadImg && this.getRightPage()) { window.open(this.settings.downloadImg+this.getPage().uuid+'#'+this.getRightPage().uuid, '_blank'); }
+                else if(this.settings.downloadImg) { window.open(this.settings.downloadImg+this.getPage().uuid, '_blank');  }
+                else {
+                  window.open(this.api.getFullJpegUrl(this.getPage().uuid), '_blank');
+                  if (this.getRightPage()) { window.open(this.api.getFullJpegUrl(this.getRightPage().uuid), '_blank'); }
+               }
             }
         }
     }
@@ -859,7 +861,7 @@ export class BookService {
         }
         if (!title) {
             title = uuid;
-        } 
+        }
         const filename = title.substring(0, 30).trim() + '.pdf';
         this.api.downloadFile(this.pdf.url).subscribe(
             blob => {
@@ -1074,7 +1076,7 @@ export class BookService {
             rightPage.selected = true;
             cached = cached && rightPage.loaded;
             pages += '-' + rightPage.number;
-        } 
+        }
         if (this.metadata) {
             this.metadata.activePages = pages;
             this.metadata.activePage = page;
@@ -1267,7 +1269,7 @@ export class BookService {
             leftPage.assignPageData(result[0]);
             if (rightPage) {
                 rightPage.assignPageData(result[1]);
-            }           
+            }
             //// doc license from the page ????
             this.licence = leftPage.licence;
             if (rightPage && !this.licence) {
@@ -1283,7 +1285,7 @@ export class BookService {
                 // this.publishNewPages(BookPageState.Loading);
                 this.subject.next(this.getViewerData());
                 this.subjectPages.next([leftPage, rightPage]);
-            } 
+            }
         });
     }
 
@@ -1309,7 +1311,7 @@ export class BookService {
         this.pageState = BookPageState.Success;
         this.pageAvailable = true;
     }
-    
+
     public onImageFailure() {
         this.pageState = BookPageState.Failure;
         this.pageAvailable = false;
@@ -1482,7 +1484,7 @@ export interface BookParams {
 export enum ViewerImageType {
     IIIF, ZOOMIFY, JPEG
 }
-  
+
 export class ViewerData {
 uuid1: string;
 uuid2: string;
@@ -1501,4 +1503,3 @@ equals(to: ViewerData): boolean {
 }
 
 }
-
