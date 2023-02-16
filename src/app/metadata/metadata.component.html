@@ -247,14 +247,6 @@
       <div class="divider"></div>
     </div>
 
-    <div *ngIf="metadata.donators">
-      <div class="app-label">{{ 'metadata.donator' | translate }}</div>
-      <a *ngFor="let donator of metadata.donators" style="display:block" target="_blank" href="{{ 'donator.' + donator + '.url' | translate }}" (click)="analytics.sendEvent('metadata', 'link', 'donator');">
-        <img src="assets/img/donator_{{donator}}.png" >
-      </a>
-    </div>
-
-
     <div *ngIf="metadata.publishers.length > 0">
       <div class="app-label">{{ 'metadata.publisher' | translate }}</div>
       <div *ngFor="let publisher of metadata.publishers; first as first" [class.space]="!first" class="app-value" >{{ publisher.fullDetail() }}</div>
@@ -399,6 +391,13 @@
       <app-metadata [metadata]="review" class="app-nested" [showControls]="false"></app-metadata>
       <div class="divider"></div>
     </ng-container>
+  </div>
+  
+  <div *ngIf="metadata.donators">
+      <div class="app-label">{{ 'metadata.donator' | translate }}</div>
+      <a *ngFor="let donator of metadata.donators" style="display:block" target="_blank" href="{{ 'donator.' + donator + '.url' | translate }}" (click)="analytics.sendEvent('metadata', 'link', 'donator');">
+        <img src="assets/img/donator_{{donator}}.png" >
+      </a>
   </div>
 
 
