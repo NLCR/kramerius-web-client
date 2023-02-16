@@ -37,6 +37,7 @@ export class AppSettings {
   public maxOmnibusParts: number;
   public maxOmnibusPages: number;
   public adminClientUrl: string;
+  public yearFrom: number;
 
   public keycloak: any;
   public termsPage : [string, string];
@@ -68,14 +69,14 @@ export class AppSettings {
   public citationServiceUrl = APP_GLOBAL.citationServiceUrl || "https://citace.kramerius.cloud";
 
   public actions = {
-    'pdf': AppSettings.action('pdf', 'always'), 
-    'print': AppSettings.action('print', 'always'), 
-    'jpeg': AppSettings.action('jpeg', 'always'), 
-    'text': AppSettings.action('text', 'always'), 
-    'metadata': AppSettings.action('metadata', 'always'), 
-    'citation': AppSettings.action('citation', 'always'), 
-    'share': AppSettings.action('share', 'always'), 
-    'selection': AppSettings.action('selection', 'always'), 
+    'pdf': AppSettings.action('pdf', 'always'),
+    'print': AppSettings.action('print', 'always'),
+    'jpeg': AppSettings.action('jpeg', 'always'),
+    'text': AppSettings.action('text', 'always'),
+    'metadata': AppSettings.action('metadata', 'always'),
+    'citation': AppSettings.action('citation', 'always'),
+    'share': AppSettings.action('share', 'always'),
+    'selection': AppSettings.action('selection', 'always'),
     'crop': AppSettings.action('crop', 'always')
   }
 
@@ -139,6 +140,7 @@ export class AppSettings {
     this.licences = kramerius.licences;
     this.containsLicences = !!kramerius.containsLicences;
     this.hiddenLocks = !!kramerius.hiddenLocks;
+    this.yearFrom = !!kramerius.yearFrom || 0;
     this.maxOmnibusPages = kramerius.maxOmnibusPages || 0;
     this.maxOmnibusParts = kramerius.maxOmnibusParts || 0;
     this.adminClientUrl = kramerius.adminClientUrl;
@@ -169,11 +171,11 @@ export class AppSettings {
   public getRelativePath(): string {
     let path = window.location.pathname + window.location.search;
     if (path.startsWith('/')) {
-      path = path.substring(1);  
+      path = path.substring(1);
     }
     path = path.substring(this.deployPath.length);
     if (path.startsWith('/')) {
-      path = path.substring(1);  
+      path = path.substring(1);
     }
     if (this.multiKramerius) {
       path = path.substring(this.code.length);
@@ -269,6 +271,7 @@ interface KrameriusData {
   mapSearch: boolean;
   hiddenLocks: boolean;
   type: string;
+  yearFrom: number;
   maxOmnibusParts: number;
   maxOmnibusPages: number;
   keycloak: boolean;
