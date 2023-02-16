@@ -74,12 +74,12 @@
       "other": "Další instituce a projekty"
     },
     "footer": {
-      "logo": "/assets/shared/sp/logo-mzk.png",
-      "contact": "Provozovatel",
-      "contact_name": "Moravská zemská knihovna v Brně",
-      "contact_address1": "Kounicova 65a",
-      "contact_address2": "601 87 Brno",
-      "contact_address3": " "
+     "logo": "/assets/shared/logo-nk.png",
+     "contact": "Provozovatel",
+     "contact_name": "Národní knihovna České republiky",
+     "contact_address1": "Klementinum 190",
+     "contact_address2": "110 00 Praha 1",
+     "contact_address3": " "
     }
   },
   "navbar": {
@@ -254,7 +254,7 @@
       "publishers": "Vyhledat nakladatele",
       "places": "Vyhledat místo vydání",
       "collections": "Vyhledat sbírku",
-      "keywords": "Vyhledat klíčové slovo", 
+      "keywords": "Vyhledat klíčové slovo",
       "languages": "Vyhledat jazyk",
       "sources": "Vyhledat zdroj",
       "licences": "Vyhledat licenci",
@@ -263,7 +263,7 @@
       "geonames": "Vyhledat geografický název"
     },
     "ordering": {
-      "label": "Řazení",      
+      "label": "Řazení",
       "occurrence": "Podle výskytů",
       "alphabetical": "Abecedně"
     },
@@ -294,10 +294,10 @@
   },
   "home": {
     "title": "Digitální knihovna Kramerius",
-    "btn_enter": "Vstupte",
+    "btn_enter": "Procházet knihovnu",
     "btn_search": "Hledej",
     "tab_visited": "Navštívené",
-    "tab_recommended": "Doporučené",    
+    "tab_recommended": "Doporučené",
     "tab_latest": "Nejnovější",
     "select_library": "Vybrat knihovnu"
   },
@@ -319,7 +319,7 @@
     "cartographic_data": "Kartografické údaje",
     "scale": "Měřítko",
     "doctype": "Typ dokumentu",
-    "category": "Druh dokumentu",     
+    "category": "Druh dokumentu",
     "notes": "Poznámky",
     "genres": "Žánr",
     "article": "Článek",
@@ -330,16 +330,16 @@
     "unit": "Část",
     "page": "Strana",
     "volume_list": "Přejít na periodikum",
-    "previous_volume": "Předchozí ročník",   
+    "previous_volume": "Předchozí ročník",
     "next_volume": "Následující ročník",
     "issue_date": "Datum vydání",
-    "previous_issue": "Předchozí číslo",   
+    "previous_issue": "Předchozí číslo",
     "issue_list": "Přejít na ročník",
     "next_issue": "Následující číslo",
     "unit_number": "Číslo",
     "unit_list": "Přejít na svazek knih",
     "next_unit": "Následující část:",
-    "previous_unit": "Předchozí část:",  
+    "previous_unit": "Předchozí část:",
     "convolute_part_list": "Přejít na seznam části konvolutu",
     "shelf_locator": "Signatura: {{shelf_locator}}",
     "authors_info": "Více o autorech",
@@ -365,7 +365,7 @@
     "periodicalitem": "Číslo {{part}}",
     "monographunit": "Část {{part}}",
     "supplement": "Příloha {{part}}",
-    "previous_volume": "Předchozí ročník",   
+    "previous_volume": "Předchozí ročník",
     "next_volume": "Následující ročník",
     "volume_list": "Seznam ročníků",
     "search": {
@@ -441,7 +441,8 @@
     "warning_generate": "Vytváření PDF dokumentu může trvat několik minut v závislosti na počtu vybraných stránek.",
     "error_generate": "PDF dokument se nepodařilo stáhnout",
     "action_generate": "Stáhnout PDF",
-    "action_prepare": "Připravit k tisku"
+    "action_prepare": "Připravit k tisku",
+    "download_pdf": "Stáhnout celé dílo v PDF"
   },
   "metadata-dialog": {
     "title": "Metadata pro",

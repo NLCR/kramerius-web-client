@@ -2,7 +2,7 @@
   "common": {
     "of": "of",
     "cancel": "Cancel",
-    "close": "Close",    
+    "close": "Close",
     "warning": "Warning",
     "of_pages": "pages",
     "n_pages": {
@@ -74,11 +74,11 @@
       "other": "Other institutions and projects"
     },
     "footer": {
-      "logo": "/assets/shared/sp/logo-mzk.png",
+      "logo": "/assets/shared/sp/logo-nk.png",
       "contact": "Impressum",
-      "contact_name": "Moravian Library in Brno",
-      "contact_address1": "Kounicova 65a",
-      "contact_address2": "601 87 Brno",
+      "contact_name": "National Library of the Czech Republic",
+      "contact_address1": "Klementinum 190",
+      "contact_address2": "110 00 Praha 1",
       "contact_address3": "Czech Republic"
     }
   },
@@ -164,9 +164,9 @@
     "advanced": "Advanced Search",
     "results": "Results",
     "keywords": "Keyword",
-    "doctypes": "Document Type",   
+    "doctypes": "Document Type",
     "categories": "Document Kind",
-    "collections": "Collection", 
+    "collections": "Collection",
     "languages": "Language",
     "licences": "Licence",
     "locations": "Location",
@@ -252,7 +252,7 @@
       "publishers": "Lookup Publisher",
       "places": "Lookup Place of Publication",
       "collections": "Lookup Collection",
-      "keywords": "Lookup Keyword", 
+      "keywords": "Lookup Keyword",
       "languages": "Lookup Language",
       "licences": "Lookup Licence",
       "genres": "Lookup Genre",
@@ -260,7 +260,7 @@
       "geonames": "Lookup Geographic name"
     },
     "ordering": {
-      "label": "Ordering",      
+      "label": "Ordering",
       "occurrence": "Occurrence",
       "alphabetical": "Alphabetical"
     },
@@ -291,10 +291,10 @@
   },
   "home": {
     "title": "Digital library Kramerius",
-    "btn_enter": "Enter",
+    "btn_enter": "Browse the library",
     "btn_search": "Search",
     "tab_visited": "Visited",
-    "tab_recommended": "Recommended",        
+    "tab_recommended": "Recommended",
     "tab_latest": "Latest",
     "select_library": "Select Library"
   },
@@ -305,7 +305,7 @@
     "publisher": "Publishing details",
     "keywords": "Keywords",
     "languages": "Language",
-    "sources": "Source",      
+    "sources": "Source",
     "geonames": "Geographic names",
     "location": "Location",
     "abstract": "Abstract",
@@ -315,10 +315,10 @@
     "physical_description": "Physical Description",
     "cartographic_data": "Cartographic data",
     "scale": "Scale",
-    "doctype": "Document type",    
+    "doctype": "Document type",
     "category": "Document kind",
     "notes": "Notes",
-    "genres": "Genre", 
+    "genres": "Genre",
     "article": "Article",
     "review_of": "Review of",
     "volume": "Volume",
@@ -327,17 +327,17 @@
     "unit": "Part",
     "page": "Page",
     "volume_list": "Volume list",
-    "previous_volume": "Previous volume",   
+    "previous_volume": "Previous volume",
     "next_volume": "Next volume",
     "issue_date": "Date of publication",
-    "previous_issue": "Previous issue",   
+    "previous_issue": "Previous issue",
     "issue_list": "Issue list",
-    "next_issue": "Next issue",  
+    "next_issue": "Next issue",
     "unit_number": "Number",
     "unit_list": "Part list",
     "next_unit": "Next part:",
-    "previous_unit": "Previous part:",  
-    "convolute_part_list": "Konvolut parts",     
+    "previous_unit": "Previous part:",
+    "convolute_part_list": "Konvolut parts",
     "shelf_locator": "Shelf/Call number: {{shelf_locator}}",
     "authors_info": "More about authors",
     "donator": "Supported by",
@@ -362,7 +362,7 @@
     "periodicalitem": "Issue {{part}}",
     "monographunit": "Unit {{part}}",
     "supplement": "Supplement {{part}}",
-    "previous_volume": "Previous Volume",   
+    "previous_volume": "Previous Volume",
     "next_volume": "Next Volume",
     "volume_list": "Volume list",
     "search": {
@@ -438,7 +438,8 @@
     "warning_generate": "Creating the PDF document can take several minutes depending on the number of selected pages.",
     "error_generate": "Failed to download PDF document",
     "action_generate": "Download PDF",
-    "action_prepare": "Prepare to print"
+    "action_prepare": "Prepare to print",
+    "download_pdf": "Download PDF document"
   },
   "metadata-dialog": {
     "title": "Metadata for",

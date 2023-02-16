@@ -14,7 +14,7 @@
         "one": "výskyt",
         "few": "výskyty",
         "many": "výskytov"
-      },      
+      },
       "set_page_number": "Zadajte číslo stránky",
       "copy_to_clipboard": "Skopírovať do schránky",
       "copied_to_clipboard": "Skopírované do schránky",
@@ -74,11 +74,11 @@
         "other": "Ďalšie inštitúcie a projekty"
       },
       "footer": {
-        "logo": "/assets/shared/sp/logo-mzk.png",
+        "logo": "/assets/shared/sp/logo-nk.png",
         "contact": "Prevádzkovateľ",
-        "contact_name": "Moravská zemská knihovna v Brně",
-        "contact_address1": "Kounicova 65a",
-        "contact_address2": "601 87 Brno",
+        "contact_name": "Národná knižnica Českej republiky",
+        "contact_address1": "Klementinum 190",
+        "contact_address2": "110 00 Praha 1",
         "contact_address3": " "
       }
     },
@@ -165,7 +165,7 @@
       "results": "Výsledky",
       "keywords": "Kľúčové slovo",
       "doctypes": "Typ dokumentu",
-      "categories": "Druh dokumentu",    
+      "categories": "Druh dokumentu",
       "collections": "Zbierky",
       "languages": "Jazyk",
       "licences": "Licencie",
@@ -233,7 +233,7 @@
       "category": {
         "label": "Prechádzať",
         "doctypes": "Typy dokumentov",
-        "categories": "Druh dokumentu",    
+        "categories": "Druh dokumentu",
         "authors": "Autori",
         "publishers": "Vydavateľa",
         "places": "Miesta vydanie",
@@ -247,12 +247,12 @@
       },
       "search": {
         "doctypes": "Vyhľadať typ dokumentu",
-        "categories": "Vyhľadať druh dokumentu",    
+        "categories": "Vyhľadať druh dokumentu",
         "authors": "Vyhľadať autora",
         "publishers": "Vyhľadať vydavateľa",
         "places": "Vyhľadať miesto vydania",
         "collections": "Vyhľadať zbierku",
-        "keywords": "Vyhľadať kľúčové slovo", 
+        "keywords": "Vyhľadať kľúčové slovo",
         "languages": "Vyhľadať jazyk",
         "licences": "Vyhľadať licenciu",
         "genres": "Vyhľadať žáner",
@@ -260,7 +260,7 @@
         "geonames": "Vyhľadať geografický názov"
       },
       "ordering": {
-        "label": "Zoradenie",      
+        "label": "Zoradenie",
         "occurrence": "Podľa výskytov",
         "alphabetical": "Abecedne"
       },
@@ -291,10 +291,10 @@
     },
     "home": {
       "title": "Digitálna knižnica Kramerius",
-      "btn_enter": "Vstúpte",
+      "btn_enter": "Prehľadávať knižnicu",
       "btn_search": "Hľadaj",
       "tab_visited": "Navštívené",
-      "tab_recommended": "Odporúčané",    
+      "tab_recommended": "Odporúčané",
       "tab_latest": "Najnovšie",
       "select_library": "Vybrať knižnicu"
     },
@@ -316,7 +316,7 @@
       "cartographic_data": "Kartografické údaje",
       "scale": "Mierka",
       "doctype": "Typ dokumentu",
-      "category": "Druh dokumentu",                
+      "category": "Druh dokumentu",
       "notes": "Poznámky",
       "genres": "Žáner",
       "article": "Článok",
@@ -362,7 +362,7 @@
       "periodicalitem": "Číslo {{part}}",
       "monographunit": "Časť {{part}}",
       "supplement": "Príloha {{part}}",
-      "previous_volume": "Predchádzajúci ročník",   
+      "previous_volume": "Predchádzajúci ročník",
       "next_volume": "Nasledujúci ročník",
       "volume_list": "Zoznam ročníkov",
       "search": {
@@ -438,7 +438,8 @@
       "warning_generate": "Vytváranie PDF dokumentu môže trvať niekoľko minút v závislosti na počte vybraných stránok.",
       "error_generate": "PDF dokument sa nepodarilo stiahnuť",
       "action_generate": "Stiahnuť PDF",
-      "action_prepare": "Pripraviť na tlač"
+      "action_prepare": "Pripraviť na tlač",
+      "download_pdf": "Stiahnuť celé dielo v PDF"
     },
     "metadata-dialog": {
       "title": "Metadáta pre",
@@ -1221,5 +1222,5 @@
       "wdc" : "Drevorezbár",
       "wde" : "Drevorytec",
       "wit" : "Svedok"
-    }  
+    }
   }
