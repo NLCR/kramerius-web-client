@@ -3,6 +3,8 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { first } from 'rxjs/operators';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Page } from '../../model/page.model';
+import { AppSettings } from './../../services/app-settings';
+import { HttpClient } from '@angular/common/http';
 import { KrameriusApiService } from '../../services/kramerius-api.service';
 import { KrameriusInfoService } from '../../services/kramerius-info.service';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -21,6 +23,7 @@ export class PdfDialogComponent implements OnInit {
   pages: Page[];
   type: string;
   name: string;
+  uuid: string;
 
   maxPageCount: number;
   inProgress: boolean;
@@ -32,8 +35,14 @@ export class PdfDialogComponent implements OnInit {
   numberOfPages = 0;
   selectedPages = 0;
 
+  pdfDownload: boolean;
+  pdfDownloadLink: string;
+  pdfDownloadMB: number;
+
   constructor(
             public dialogRef: MatDialogRef<PdfDialogComponent>,
+            public appSettings: AppSettings,
+            private http: HttpClient,
             private krameriusApi: KrameriusApiService,
             private krameriusInfo: KrameriusInfoService,
             private _sanitizer: DomSanitizer,
@@ -49,6 +58,7 @@ export class PdfDialogComponent implements OnInit {
     this.pages = this.data['pages'];
     this.type = this.data['type'];
     this.name = this.data['name'];
+    this.uuid = this.data['uuid'];
     this.inProgress = true;
     this.krameriusInfo.data$.pipe(first()).subscribe(
       info => {
@@ -60,6 +70,14 @@ export class PdfDialogComponent implements OnInit {
         this.inProgress = false;
       }
     );
+    this.pdfDownloadLink=this.appSettings.pdfUrl+this.uuid;
+
+    this.http.get(this.pdfDownloadLink).toPromise().then((data:any) => {
+        if(data.pdf=="true") {this.pdfDownload=true;}
+        this.pdfDownloadMB=data.size;
+      });
+
+    this.pdfDownloadLink=this.pdfDownloadLink+"&pdf=true";
   }
 
   onPageSelected(page: Page, event) {
@@ -157,7 +175,7 @@ export class PdfDialogComponent implements OnInit {
   private getLanguage(): string {
     return this.translate.currentLang === 'cs' ? 'cs' : 'en';
   }
-  
+
   onCancel() {
     this.dialogRef.close();
   }
