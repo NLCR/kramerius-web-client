@@ -38,6 +38,7 @@ export class AppSettings {
   public maxOmnibusPages: number;
   public adminClientUrl: string;
   public yearFrom: number;
+  public notice: string;
 
   public keycloak: any;
   public termsPage : [string, string];
@@ -140,7 +141,8 @@ export class AppSettings {
     this.licences = kramerius.licences;
     this.containsLicences = !!kramerius.containsLicences;
     this.hiddenLocks = !!kramerius.hiddenLocks;
-    this.yearFrom = !!kramerius.yearFrom || 0;
+    this.yearFrom = kramerius.yearFrom || 0;
+    this.notice = kramerius.notice || '';
     this.maxOmnibusPages = kramerius.maxOmnibusPages || 0;
     this.maxOmnibusParts = kramerius.maxOmnibusParts || 0;
     this.adminClientUrl = kramerius.adminClientUrl;
@@ -272,6 +274,7 @@ interface KrameriusData {
   hiddenLocks: boolean;
   type: string;
   yearFrom: number;
+  notice: string;
   maxOmnibusParts: number;
   maxOmnibusPages: number;
   keycloak: boolean;
