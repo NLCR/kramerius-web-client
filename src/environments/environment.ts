@@ -5,5 +5,5 @@
 declare let APP_GLOBAL: any;
 
 export const environment = {
-  production: false
+  production: true
 };
