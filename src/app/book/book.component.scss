@@ -13,6 +13,12 @@
     height: 100%;
     overflow: hidden;
   }
+  app-map-viewer {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
   app-navigation {
     display: flex;
     flex-direction: column;
@@ -38,7 +44,6 @@
     }
     
     @media #{$small-and-down} {
-      display: block;
       width: 100%;
       position: absolute;
       left: 0;

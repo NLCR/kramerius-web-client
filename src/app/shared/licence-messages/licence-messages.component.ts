@@ -41,23 +41,27 @@ export class LicenceMessagesComponent implements OnInit {
       }
       return;
     }
-    const licences = this.licenceService.availableLicences(this.licences);
+    const licences = this.licenceService.availableLicences(this.licences, true);
     if (this.full) {
       this.html += `<h3>${this.translate.instant("licence.private_label")}</h3>`;
     }
     if (this.full && licences.length > 0) {
       this.html += `<div class="app-licence-hint">${this.translate.instant("licence.licences_before")}</div>`;
       this.loadLicences(licences, () => {
-        this.html += `<div class="app-licence-hint">${this.translate.instant("licence.licences_after")}</div>`;
-        this.loadLicences(['_private'], () => {
+        if (!this.settings.ignorePolicyFlag) {
+          this.html += `<div class="app-licence-hint">${this.translate.instant("licence.licences_after")}</div>`;
+          this.loadLicences(['_private'], () => {
+            this.loading = false;
+          });
+        } else {
           this.loading = false;
-        });
+        }
       });
     } else if (!this.full) {
       this.loadLicences(licences, () => {
         this.loading = false;
       });
-    } else {
+    } else if (!this.settings.ignorePolicyFlag) {
       this.loadLicences(['_private'], () => {
         this.loading = false;
       });

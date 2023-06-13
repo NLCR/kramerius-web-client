@@ -340,15 +340,14 @@ export class SolrService {
     private buildTopLevelFilter(topLevelCollectionsOnly: boolean): string {
         const field = this.field('model');
         let filter = `${field}:${this.settings.doctypes.join(` OR ${field}:`)}`;
-        if (this.settings.doctypes.indexOf('monograph') >= 0) {
+        if (this.settings.availableDoctype('monograph')) {
             filter = `${filter} OR ${field}:monographunit`
         }
-        if (!this.settings.k5Compat()) {
-            if (topLevelCollectionsOnly) {
-                filter = `${filter} OR (${field}:collection AND ${this.field('is_top_collection')}:true)`;                
-            } else {
-                filter = `${filter} OR ${field}:collection`;
-            }
+        if (this.settings.code == 'snk' && this.settings.availableDoctype('article')) {
+            filter = `${filter} OR ${field}:internalpart`
+        }
+        if (topLevelCollectionsOnly && this.settings.availableDoctype('collection')) { 
+            filter = filter.replace(`${field}:collection`, `(${field}:collection AND ${this.field('is_top_collection')}:true)`);
         }
         return filter;
     }
@@ -423,6 +422,22 @@ export class SolrService {
         return (doc[this.field('licences_search')] || []).concat(doc[this.field('licences_contains')] || []).concat(doc[this.field('licences_ancestors')] || []);
     }
 
+    private addPoliycLicences(item: any) {
+        if (!this.settings.ignorePolicyFlag) {
+            if (item.public) {
+                item.licences.push('_public');
+            } else {
+                item.licences.push('_private');
+            }
+        }
+    }
+
+    private assignLicences(item: any, doc: any) {
+        item.public = doc[this.field('accessibility')] === 'public';
+        item.licences = this.parseLicences(doc);
+        this.addPoliycLicences(item);
+    }
+
     private buildPeriodicalQuery(parent: string, type: string, models: string[], query: PeriodicalQuery, applyYear: boolean): string {
         let q = `fl=${this.field('id')},${this.field('accessibility')},${this.field('model')},${this.field('title')},${this.field('date')},${this.field('authors')},${this.field('rels_ext_index')}`;
         if (this.settings.k5Compat()) {
@@ -443,7 +458,12 @@ export class SolrService {
             q += ` AND ${this.field('accessibility')}: ${query.accessibility}`;
         }
         if (query && applyYear && query.isYearRangeSet()) {
-            q += `(${this.field('date_year_from')}:[* TO ${query.to}] AND ${this.field('date_year_to')}:[${query.from} TO *])`
+            q += `AND ((${this.field('date_year_from')}:[* TO ${query.to}] AND ${this.field('date_year_to')}:[${query.from} TO *])`;
+            if (this.settings.k5Compat()) {
+                q += ` OR rok:[${query.from} TO ${query.to}])`;
+            } else {
+                q += ')';
+            }
         }
         q += '&sort=';
         if (this.settings.k5Compat()) {
@@ -534,10 +554,12 @@ export class SolrService {
 
     buildBrowseQuery(query: BrowseQuery): string {
         let q = 'q=(' + this.buildTopLevelFilter(true) + ')';
-        if (query.accessibility === 'public' && this.settings.filters.includes('accessibility')) {
-            q += ` AND ${this.field('accessibility')}:public`;
-        } else if (query.accessibility === 'private') {
-            q += ` AND ${this.field('accessibility')}:private`;
+        if (this.settings.filters.includes('accessibility')) {
+            if (query.accessibility === 'public') {
+                q += ` AND ${this.field('accessibility')}:public`;
+            } else if (query.accessibility === 'private') {
+                q += ` AND ${this.field('accessibility')}:private`;
+            }
         }
         if (query.textSearch()) {
             for (const word of query.text.split(' ')) {
@@ -598,8 +620,11 @@ export class SolrService {
             }
             items.push(item);
         }
-        if (field === this.getFilterField('model')) {
+        if (field === this.getFilterField('doctypes')) {
             this.mergeBrowseMonographsAndMonographUnits(items);
+            if (this.settings.code == 'snk') {
+                this.mergeBrowseArticlesAndInternalParts(items);
+            }
         }
         const numberOfResults = query.textSearch() ? items.length : this.numberOfFacets(solr);
         return [items, numberOfResults];
@@ -646,7 +671,12 @@ export class SolrService {
             fq += ` AND ${this.field('accessibility')}:${query.accessibility}`;
         }
         if (query.isYearRangeSet()) {
-            fq += ` AND (${this.field('date_year_from')}:[* TO ${query.to}] AND ${this.field('date_year_to')}:[${query.from} TO *])`;
+            fq += ` AND ((${this.field('date_year_from')}:[* TO ${query.to}] AND ${this.field('date_year_to')}:[${query.from} TO *])`;
+            if (this.settings.k5Compat()) {
+                fq += ` OR rok:[${query.from} TO ${query.to}])`;
+            } else {
+                fq += ')';
+            }
         }
         if (models && models.length > 0) {
             const modelRestriction = models.map(a => `${this.field('model')}:` + a).join(' OR ');
@@ -676,19 +706,13 @@ export class SolrService {
         const item = new DocumentItem();
         item.uuid = doc[this.field('id')];
         item.title = doc[this.field('title')];
-        item.public = doc[this.field('accessibility')] === 'public';
         item.doctype = doc[this.field('model')];
         item.date = doc[this.field('date')];
         item.authors = doc[this.field('authors')];
         item.donators = doc[this.field('donators')];
         item.sources = doc[this.field('cdk_sources')];
         item.pdf = doc[this.field('img_full_mime')] == "application/pdf";
-        item.licences = this.parseLicences(doc);
-        if (item.public) {
-            item.licences.push('_public');
-        } else {
-            item.licences.push('_private');
-        }
+        this.assignLicences(item, doc);
         item.root_uuid = doc[this.field('root_pid')];
         if (item.doctype === 'periodicalvolume') {
             item.volumeNumber = doc[this.field('part_number')];
@@ -773,7 +797,10 @@ export class SolrService {
             q+='*';
         }
         q += '&fq=' + fq;
-        q += `&bq=${this.field('model')}:monograph^5&bq=${this.field('model')}:periodical^5&bq=${this.field('accessibility')}:public^5`;
+        q += `&bq=${this.field('model')}:monograph^5&bq=${this.field('model')}:periodical^5`;
+        if (!this.settings.ignorePolicyFlag) {
+            q += `&bq=${this.field('accessibility')}:public^5`;
+        }
         q += '&rows=50';
         return q;
     }
@@ -818,22 +845,34 @@ export class SolrService {
         let value = qString;
         let q = 'q=';
         if (query.dsq) {
-            q += query.dsq + ' AND '
+            q += query.dsq + ' AND ';
         }
         if (query.isBoundingBoxSet()) {
-            q += `{!field f=${this.field('coords_range')} score=overlapRatio}Intersects(ENVELOPE(${query.west},${query.east},${query.north},${query.south}))&fq=`;
+            if (facet == 'markers') {
+                q += `{!field f=${this.field('coords_range')} score=overlapRatio}Intersects(ENVELOPE(-180,180,90,-90))&fq=`;
+            } else {
+                q += `{!field f=${this.field('coords_range')} score=overlapRatio}Intersects(ENVELOPE(${query.west},${query.east},${query.north},${query.south}))&fq=`;
+            }
         }
         if (query.isCustomFieldSet()) {
             value = query.value;
             let fields = '';
             if (query.field == 'all') {
-                fields = ['title', 'author', 'keyword', 'geoname', 'signature', 'issn', 'fulltext'].map(f => this.getSolrCustomField(f, true)).join(' ');
+                fields = ['title', 'author', 'keyword', 'geoname', 'signature', 'issn', 'isbn', 'fulltext'].map(f => this.getSolrCustomField(f, true)).join(' ');
             } else {
                 fields = this.getSolrCustomField(query.field);
             }
             q += `_query_:"{!edismax qf=\'${fields}\' v=$q1}\"`;
         } else if (qString) {
-            q += `_query_:"{!edismax qf=\'${this.field('titles_search')}^10 ${this.field('authors_search')}^2 ${this.field('keywords_search')} ${this.field('text_ocr')}^0.1 ${this.field('shelf_locator')}\' bq=\'(${this.field('level')}:0)^200\' bq=\'(${this.field('accessibility')}:public)^2\' bq=\'(${this.field('model')}:page)^0.1\' v=$q1}\"`;
+            q += `_query_:"{!edismax qf=\'${this.field('titles_search')}^10 ${this.field('authors_search')}^2 ${this.field('keywords_search')} ${this.field('text_ocr')}^0.1`;
+            if (!this.settings.k5Compat()) {
+                q += ` ${this.field('isbn')}`; 
+            }
+            q += ` ${this.field('shelf_locator')}\' bq=\'(${this.field('level')}:0)^200\'`;
+            if (!this.settings.ignorePolicyFlag) {
+                q += ` bq=\'(${this.field('accessibility')}:public)^2\'`;
+            }
+            q += ` bq=\'(${this.field('model')}:page)^0.1\' v=$q1}\"`;
         } else {
             q += '*:*';
         }
@@ -865,22 +904,26 @@ export class SolrService {
             }
             q += `,${this.field('geonames_facet')}`;
         }
-        q += '&facet=true&facet.mincount=1'
-           + this.addFacetToQuery(facet, 'keywords', query.keywords.length === 0)
-           + this.addFacetToQuery(facet, 'languages', query.languages.length === 0)
-           + this.addFacetToQuery(facet, 'sources', query.sources.length === 0)
-           + this.addFacetToQuery(facet, 'licences', query.licences.length === 0)
-           + this.addFacetToQuery(facet, 'locations', query.locations.length === 0)
-           + this.addFacetToQuery(facet, 'geonames', query.geonames.length === 0)
-           + this.addFacetToQuery(facet, 'authors', query.authors.length === 0)
-           + this.addFacetToQuery(facet, 'collections', query.collections.length === 0)
-           + this.addFacetToQuery(facet, 'publishers', query.publishers.length === 0)
-           + this.addFacetToQuery(facet, 'places', query.places.length === 0)
-           + this.addFacetToQuery(facet, 'doctypes', query.doctypes.length === 0)
-           + this.addFacetToQuery(facet, 'categories', query.categories.length === 0)
-           + this.addFacetToQuery(facet, 'genres', query.genres.length === 0)
-           + this.addFacetToQuery(facet, 'accessibility',  query.accessibility === 'all');
-        if (facet) {
+        if (facet != 'markers') {
+            q += '&facet=true&facet.mincount=1'
+            + this.addFacetToQuery(facet, 'keywords', query.keywords.length === 0)
+            + this.addFacetToQuery(facet, 'languages', query.languages.length === 0)
+            + this.addFacetToQuery(facet, 'sources', query.sources.length === 0)
+            + this.addFacetToQuery(facet, 'licences', query.licences.length === 0)
+            + this.addFacetToQuery(facet, 'locations', query.locations.length === 0)
+            + this.addFacetToQuery(facet, 'geonames', query.geonames.length === 0)
+            + this.addFacetToQuery(facet, 'authors', query.authors.length === 0)
+            + this.addFacetToQuery(facet, 'collections', query.collections.length === 0)
+            + this.addFacetToQuery(facet, 'publishers', query.publishers.length === 0)
+            + this.addFacetToQuery(facet, 'places', query.places.length === 0)
+            + this.addFacetToQuery(facet, 'doctypes', query.doctypes.length === 0)
+            + this.addFacetToQuery(facet, 'categories', query.categories.length === 0)
+            + this.addFacetToQuery(facet, 'genres', query.genres.length === 0)
+            + this.addFacetToQuery(facet, 'accessibility',  query.accessibility === 'all');
+        }
+        if (facet == 'markers') {
+            q += '&rows=50000';
+        } else if (facet) {
             q += '&rows=0';
         } else if (query.isBoundingBoxSet()) {
             q += '&rows=' + '100' + '&start=' + '0';
@@ -904,59 +947,15 @@ export class SolrService {
                 fqFilters.push(`(${this.field('parent_collections')}:"${query.collection}")`);
             }
         } else {
-            if (this.buildQ(query.query)|| query.isCustomFieldSet()) {
+            if (this.buildQ(query.query) || query.isCustomFieldSet() || query.isBoundingBoxSet()) {
                 fqFilters.push(`(${this.buildTopLevelFilter(false)} OR ${this.field('model')}:page OR ${this.field('model')}:article)`);
             } else {
                 fqFilters.push(`(${this.buildTopLevelFilter(!fromAutocomplete)})`);
             }
         }
-        // if (facet == 'accessible') {
-        //     let q = `${this.field('accessibility')}:public`;
-        //     if (this.licences.userLicences) {
-        //         const licences = this.licences.userLicences;
-        //         if (licences) {
-        //             let a = []
-        //             for (const l of this.licences.userLicences) {
-        //                 let f = `${this.field('licences_search')}:${l}`
-        //                 if (!this.settings.k5Compat() || this.settings.containsLicences) {
-        //                     f += ` OR ${this.field('licences_contains')}:${l}`;
-        //                 }
-        //                 if (!this.settings.k5Compat()) {
-        //                     f += ` OR ${this.field('licences_ancestors')}:${l}`;
-        //                 }
-        //                 a.push(f)
-        //             }
-        //             q += ` OR ${a.join(' OR ')}`;
-        //         }
-        //     }
-        //     fqFilters.push(`(${q})`);
-        // } else if (facet !== 'accessibility' && this.settings.filters.indexOf('accessibility') > -1) {
-        //     if (query.accessibility === 'public') {
-        //         fqFilters.push(`${this.field('accessibility')}:public`);
-        //     } else if (query.accessibility === 'private') {
-        //         fqFilters.push(`${this.field('accessibility')}:private`);
-        //     } else if (query.accessibility === 'accessible') {
-        //         let q = `${this.field('accessibility')}:public`;
-        //         if (this.licences.userLicences) {
-        //             const licences = this.licences.userLicences;
-        //             if (licences) {
-        //                 let a = []
-        //                 for (const l of this.licences.userLicences) {
-        //                     let f = `${this.field('licences_search')}:${l}`
-        //                     if (!this.settings.k5Compat() || this.settings.containsLicences) {
-        //                         f += ` OR ${this.field('licences_contains')}:${l}`;
-        //                     }
-        //                     if (!this.settings.k5Compat()) {
-        //                         f += ` OR ${this.field('licences_ancestors')}:${l}`;
-        //                     }
-        //                     a.push(f)
-        //                 }
-        //                 q += ` OR ${a.join(' OR ')}`;
-        //             }
-        //         }
-        //         fqFilters.push(`(${q})`);
-        //     }            
-        // }
+        if (facet == 'markers') {
+            // fqFilters.push(`-${this.field('model')}:map`);
+        }  
         if (facet !== 'accessibility' && this.settings.filters.indexOf('accessibility') > -1) {
             if (query.accessibility === 'public') {
                 fqFilters.push(`${this.field('accessibility')}:public`);
@@ -966,7 +965,7 @@ export class SolrService {
         }
         if (facet !== 'access' && this.settings.filters.indexOf('access') > -1 && (!facet || !facet.startsWith('access:'))) {
             if (query.access === 'accessible') {
-                let q = `${this.field('accessibility')}:public`;
+                let q = this.settings.ignorePolicyFlag ? '' : `${this.field('accessibility')}:public`;
                 if (this.licences.userLicences) {
                     const licences = this.licences.userLicences;
                     if (licences) {
@@ -981,12 +980,18 @@ export class SolrService {
                             }
                             a.push(f)
                         }
-                        q += ` OR ${a.join(' OR ')}`;
+                        if (q) {
+                            q += ` OR ${a.join(' OR ')}`;
+                        } else {
+                            q = `${a.join(' OR ')}`;
+                        }
                     }
                 }
-                fqFilters.push(`(${q})`);
+                if (q) {
+                    fqFilters.push(`(${q})`);
+                }
             } else if (query.access === 'open') {
-                let q = `${this.field('accessibility')}:public`;
+                let q = this.settings.ignorePolicyFlag ? '' : `${this.field('accessibility')}:public`;
                 const licences = this.licences.licencesByType('open');
                 if (licences.length > 0) {
                     let a = []
@@ -1000,11 +1005,17 @@ export class SolrService {
                         }
                         a.push(f)
                     }
-                    q += ` OR ${a.join(' OR ')}`;
+                    if (q) {
+                        q += ` OR ${a.join(' OR ')}`;
+                    } else {
+                        q = `${a.join(' OR ')}`;
+                    }
                 }
-                fqFilters.push(`(${q})`);
+                if (q) {
+                    fqFilters.push(`(${q})`);
+                }
             } else if (query.access === 'terminal') {
-                let q = `${this.field('accessibility')}:private`;
+                let q = this.settings.ignorePolicyFlag ? '' : `${this.field('accessibility')}:private`;
                 const licencesT = this.licences.licencesByType('terminal');
                 if (licencesT.length > 0) {
                     let a = []
@@ -1018,7 +1029,11 @@ export class SolrService {
                         }
                         a.push(f)
                     }
-                    q += ` OR ${a.join(' OR ')}`;
+                    if (q) {
+                        q += ` OR ${a.join(' OR ')}`;
+                    } else {
+                        q = `${a.join(' OR ')}`;
+                    }
                 }
                 const licencesL = this.licences.licencesByType('login');
                 if (licencesL.length > 0) {
@@ -1033,10 +1048,16 @@ export class SolrService {
                         }
                         a.push(f)
                     }
-                    q = `(${q})`
-                    q += ` AND NOT (${a.join(' OR ')})`;
+                    if (q) {
+                        q = `(${q})`
+                        q += ` AND NOT (${a.join(' OR ')})`;
+                    } else {
+                        q = `NOT (${a.join(' OR ')})`;
+                    }
                 }
-                fqFilters.push(`(${q})`);
+                if (q) {
+                    fqFilters.push(`(${q})`);
+                }
             } else if (query.access === 'login') {
                 const licences = this.licences.licencesByType('login');
                 if (licences.length > 0) {
@@ -1063,7 +1084,7 @@ export class SolrService {
 
         if (facet && facet.startsWith('access:')) {
             if (facet == 'access:accessible') {
-                let q = `${this.field('accessibility')}:public`;
+                let q = this.settings.ignorePolicyFlag ? '' : `${this.field('accessibility')}:public`;
                 if (this.licences.userLicences) {
                     const licences = this.licences.userLicences;
                     if (licences) {
@@ -1078,12 +1099,18 @@ export class SolrService {
                             }
                             a.push(f)
                         }
-                        q += ` OR ${a.join(' OR ')}`;
+                        if (q) {
+                            q += ` OR ${a.join(' OR ')}`;
+                        } else {
+                            q = `${a.join(' OR ')}`;
+                        }
                     }
                 }
-                fqFilters.push(`(${q})`);
+                if (q) {
+                    fqFilters.push(`(${q})`);
+                }
             } else if (facet == 'access:open') {
-                let q = `${this.field('accessibility')}:public`;
+                let q = this.settings.ignorePolicyFlag ? '' : `${this.field('accessibility')}:public`;
                 const licences = this.licences.licencesByType('open');
                 if (licences.length > 0) {
                     let a = []
@@ -1097,11 +1124,17 @@ export class SolrService {
                         }
                         a.push(f)
                     }
-                    q += ` OR ${a.join(' OR ')}`;
+                    if (q) {
+                        q += ` OR ${a.join(' OR ')}`;
+                    } else {
+                        q = `${a.join(' OR ')}`;
+                    }
                 }
-                fqFilters.push(`(${q})`);
+                if (q) {
+                    fqFilters.push(`(${q})`);
+                }
             } else if (facet == 'access:terminal') {
-                let q = `${this.field('accessibility')}:private`;
+                let q = this.settings.ignorePolicyFlag ? '' : `${this.field('accessibility')}:private`;
                 const licencesT = this.licences.licencesByType('terminal');
                 if (licencesT.length > 0) {
                     let a = []
@@ -1115,7 +1148,11 @@ export class SolrService {
                         }
                         a.push(f)
                     }
-                    q += ` OR ${a.join(' OR ')}`;
+                    if (q) {
+                        q += ` OR ${a.join(' OR ')}`;
+                    } else {
+                        q = `${a.join(' OR ')}`;
+                    }
                 }
                 const licencesL = this.licences.licencesByType('login');
                 if (licencesL.length > 0) {
@@ -1130,10 +1167,16 @@ export class SolrService {
                         }
                         a.push(f)
                     }
-                    q = `(${q})`
-                    q += ` AND NOT (${a.join(' OR ')})`;
+                    if (q) {
+                        q = `(${q})`
+                        q += ` AND NOT (${a.join(' OR ')})`;
+                    } else {
+                        q = `NOT (${a.join(' OR ')})`;
+                    }
                 }
-                fqFilters.push(`(${q})`);
+                if (q) {
+                    fqFilters.push(`(${q})`);
+                }
             } else if (facet == 'access:login') {
                 const licences = this.licences.licencesByType('login');
                 if (licences.length > 0) {
@@ -1170,11 +1213,17 @@ export class SolrService {
 
         if (query.isYearRangeSet()) {
             const from = query.from === 0 ? 1 : query.from;
-            fqFilters.push(`(${this.field('date_year_from')}:[* TO ${query.to}] AND ${this.field('date_year_to')}:[${from} TO *])`);
+            let yearQ = `((${this.field('date_year_from')}:[* TO ${query.to}] AND ${this.field('date_year_to')}:[${from} TO *])`
+            if (this.settings.k5Compat()) {
+                yearQ += ` OR rok:[${query.from} TO ${query.to}])`;
+            } else {
+                yearQ += ')';
+            }
+            fqFilters.push(yearQ);
         }
         const withQueryString = query.hasQueryString();
         fqFilters.push(this.buildFacetFilter(withQueryString, 'keywords', query.keywords, facet));
-        fqFilters.push(this.buildFacetFilter(withQueryString, 'doctypes', query.doctypes, facet));
+        fqFilters.push(this.buildFacetFilter(withQueryString || query.isBoundingBoxSet(), 'doctypes', query.doctypes, facet));
         fqFilters.push(this.buildFacetFilter(withQueryString, 'categories', query.categories, facet));
         fqFilters.push(this.buildFacetFilter(withQueryString, 'authors', query.authors, facet));
         fqFilters.push(this.buildFacetFilter(withQueryString, 'languages', query.languages, facet));
@@ -1239,6 +1288,9 @@ export class SolrService {
                     if (values.indexOf('monograph') >= 0) {
                         filter = `${filter} OR ${field}:monographunit`
                     }
+                    if (this.settings.code == 'snk' && values.indexOf('article') >= 0) {
+                        filter = `${filter} OR ${field}:internalpart`
+                    }
                     return `(${filter})`;
                 }
             } else if (field === 'licences') {
@@ -1289,7 +1341,7 @@ export class SolrService {
         } else if (field === 'genres') {
             return this.field('genres_facet');
         } else if (field === 'collections') {
-            return 'collection';
+            return 'collection.desc';
         } else if (field === 'accessibility') {
             return this.field('accessibility');
         }
@@ -1337,6 +1389,9 @@ export class SolrService {
         for (const doc of json['response']['docs']) {
             const item = new DocumentItem();
             item.doctype = doc[this.field('model')];
+            if (this.settings.code == 'snk' && item.doctype == 'internalpart') {
+                item.doctype = 'article';
+            }
             if (this.settings.k5Compat()) {
                 item.title = doc[this.field('titles')];
                 if (this.settings.filters.indexOf('categories') >= 0) {
@@ -1380,17 +1435,11 @@ export class SolrService {
                 item.title = '-';
             }
             item.uuid = doc[this.field('id')];
-            item.public = doc[this.field('accessibility')] === 'public';
             item.date = doc[this.field('date')];
             item.authors = doc[this.field('authors')];
             item.sources = doc[this.field('cdk_sources')];
-            item.licences = this.parseLicences(doc);
-            if (item.public) {
-                item.licences.push('_public');
-            } else {
-                item.licences.push('_private');
-            }
-            item.geonames = doc[this.field('geonames_facet')];
+            this.assignLicences(item, doc);
+            item.geonames = doc[this.field('geonames_facet')] || []; 
             if (this.settings.k5Compat()) {
                 this.parseLocationOld(doc[this.field('coords_location')], item);
             } else {
@@ -1464,12 +1513,12 @@ export class SolrService {
 
     facetDoctypeList(solr, joinedDocytypes: boolean, doctypes: string[]) {
         const map = {};
-        const types = this.settings.k5Compat() ? doctypes : doctypes.concat(['collection']);
-        for (const doctype of types) {
+        for (const doctype of doctypes) {
             map[doctype] = 0;
         }
         const list = [];
         const facetFields = solr['facet_counts']['facet_fields'][this.field('model_path')];
+        const withQuerry = !!solr['grouped'];
         for (let i = 0; i < facetFields.length; i += 2) {
             const f = facetFields[i];
             if (f.indexOf('/') < 0) {
@@ -1486,6 +1535,19 @@ export class SolrService {
                     }
                 } else {
                     const ff = f.split('/');
+                    if (!withQuerry) {
+                        if (map['article'] !== undefined && ff[ff.length - 1] == 'article') {
+                            map['article'] += facetFields[i + 1];
+                            continue;
+                        }
+                        if (this.settings.code == 'snk' && ff[ff.length - 1] == 'internalpart') {
+                            map['article'] += facetFields[i + 1];
+                            continue;
+                        }
+                    } else {
+                        map['article'] = -1;
+                        map['internalpart'] = -1;
+                    }
                     if (map[ff[0]] !== undefined && (ff[0] != 'convolute' || ff[ff.length - 1] == 'page')) {
                         map[ff[0]] += facetFields[i + 1];
                     }
@@ -1495,8 +1557,10 @@ export class SolrService {
                 }
             }
         }
-        for (const doctype of types) {
-            list.push({'value' : doctype, 'count': map[doctype]});
+        for (const doctype of doctypes) {
+            if (map[doctype] >= 0) {
+                list.push({'value' : doctype, 'count': map[doctype]});
+            }
         }
         return list;
     }
@@ -1552,13 +1616,7 @@ export class SolrService {
         for (const doc of solr['response']['docs']) {
             const item = new PeriodicalFtItem();
             item.uuid = doc[this.field('id')];
-            item.public = doc[this.field('accessibility')] === 'public';
-            item.licences = this.parseLicences(doc);
-            if (item.public) {
-                item.licences.push('_public');
-            } else {
-                item.licences.push('_private');
-            }
+            this.assignLicences(item, doc);
             if (doc[this.field('model')] === 'article') {
                 item.type = 'article';
                 item.authors = doc[this.field('authors')];
@@ -1676,16 +1734,10 @@ export class SolrService {
                 }
                 item.index = doc[this.field('rels_ext_index')];
             }
-            item.public = doc[this.field('accessibility')] === 'public';
             item.doctype = doc[this.field('model')];
             item.date = doc[this.field('date')];
             item.authors = doc[this.field('authors')];
-            item.licences = this.parseLicences(doc);
-            if (item.public) {
-                item.licences.push('_public');
-            } else {
-                item.licences.push('_private');
-            }
+            this.assignLicences(item, doc);
             item.resolveUrl(this.settings.getPathPrefix());
             items.push(item);
         }
@@ -1706,16 +1758,10 @@ export class SolrService {
             } else {
                 item.index = doc[this.field('rels_ext_index')];
             }
-            item.public = doc[this.field('accessibility')] === 'public';
             item.doctype = doc[this.field('model')];
             item.date = doc[this.field('date')];
             item.authors = doc[this.field('authors')];
-            item.licences = this.parseLicences(doc);
-            if (item.public) {
-                item.licences.push('_public');
-            } else {
-                item.licences.push('_private');
-            }
+            this.assignLicences(item, doc);
             item.resolveUrl(this.settings.getPathPrefix());
             items.push(item);
         }
@@ -1763,7 +1809,6 @@ export class SolrService {
         return items;
     }
 
-
     bookChildItems(solr): any[] {
         const items = [];
         const k5 = this.settings.k5Compat();
@@ -1775,11 +1820,10 @@ export class SolrService {
                 title: doc[this.field('title')],
                 policy: doc[this.field('accessibility')]
             }
-            if (page.policy == 'public') {
-                page.licences.push('_public');
-            } else {
-                page.licences.push('_private');
+            if (this.settings.code == 'snk' && page.model == 'internalpart') {
+                page.model = 'article';
             }
+            this.addPoliycLicences(page);
             if (k5) {
                 const details = doc['details'];
                 let idx = 0;
@@ -1827,14 +1871,8 @@ export class SolrService {
     periodicalItem(doc): PeriodicalItem {
         const item = new PeriodicalItem();
         item.uuid = doc[this.field('id')];
-        item.public = doc[this.field('accessibility')] === 'public';        
         item.doctype = doc[this.field('model')];
-        item.licences = this.parseLicences(doc);
-        if (item.public) {
-            item.licences.push('_public');
-        } else {
-            item.licences.push('_private');
-        }
+        this.assignLicences(item, doc);
         item.title = doc[this.field('title')];
         if (this.settings.k5Compat()) {
             this.periodicalItemOld(doc, item);
@@ -1911,7 +1949,6 @@ export class SolrService {
             const doc = doclist['docs'][0];
             const item = new DocumentItem();
             item.uuid = doc[this.field('root_pid')];
-            item.public = doc[this.field('accessibility')] === 'public';
             const dp = this.getPath('model', doc);
             const params = {};
             item.title = doc[this.field('title')];
@@ -1941,14 +1978,9 @@ export class SolrService {
             item.date = doc[this.field('date')];
             item.authors = doc[this.field('authors')];
             item.sources = doc[this.field('cdk_sources')];
-            item.licences = this.parseLicences(doc);
-            if (item.public) {
-                item.licences.push('_public');
-            } else {
-                item.licences.push('_private');
-            }
+            this.assignLicences(item, doc);
             item.description = doc[this.field('collection_description')];
-            item.geonames = doc[this.field('geonames_facet')];
+            item.geonames = doc[this.field('geonames_facet')] || [];
             if (this.settings.k5Compat()) {
                 this.parseLocationOld(doc[this.field('coords_location')], item);
             } else {
@@ -1987,6 +2019,26 @@ export class SolrService {
             } else {
                 monograph.count += monographunit.count;
                 items.splice(items.indexOf(monographunit), 1);
+            }
+        }
+    }
+
+    private mergeBrowseArticlesAndInternalParts(items: BrowseItem[]) {
+        let article;
+        let internalpart;
+        for (const item of items) {
+            if (item.value === 'article') {
+                article = item;
+            } else if (item.value === 'internalpart') {
+                internalpart = item;
+            }
+        }
+        if (internalpart) {
+            if (!article) {
+                items.push( new BrowseItem('article', 'article', internalpart.count) );
+            } else {
+                article.count += internalpart.count;
+                items.splice(items.indexOf(internalpart), 1);
             }
         }
     }

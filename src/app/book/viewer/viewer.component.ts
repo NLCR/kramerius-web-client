@@ -14,7 +14,6 @@ import { ZoomifyService } from '../../services/zoomify.service';
 import { AltoService } from '../../services/alto-service';
 import { LoggerService } from '../../services/logger.service';
 import { LicenceService } from '../../services/licence.service';
-import { LocalStorageService } from '../../services/local-storage.service';
 
 declare var ol: any;
 
@@ -40,16 +39,22 @@ export class ViewerComponent implements OnInit, OnDestroy {
   private imageHeight = 0;
 
   private lastRotateTime = 0;
+  private lastTouchTime;
+  private lastTouchX;
+  private initialResolution;
 
   private viewerActionsSubscription: Subscription;
   private pageSubscription: Subscription;
   private intervalSubscription: Subscription;
 
   public hideOnInactivity = false;
+  public firstHideOnInactivity = true;
+
   public lastMouseMove = 0;
 
   private selectionInteraction;
   private mouseWheelZoomInteraction;
+  private dragPanInteraction;
   private doubleClickZoomInteraction;
 
   private selectionType: SelectionType;
@@ -63,7 +68,6 @@ export class ViewerComponent implements OnInit, OnDestroy {
               public settings: AppSettings,
               public licences: LicenceService,
               private http: HttpClient,
-              private localStorage: LocalStorageService,
               private iiif: IiifService,
               private logger: LoggerService,
               private zoomify: ZoomifyService,
@@ -86,17 +90,20 @@ export class ViewerComponent implements OnInit, OnDestroy {
       }
     );
     this.updateImage(this.bookService.getViewerData());
-    this.intervalSubscription = interval(4000).subscribe( () => {
+    this.lastMouseMove = new Date().getTime();
+    this.intervalSubscription = interval(1000).subscribe( () => {
       const lastMouseDist = new Date().getTime() - this.lastMouseMove;
-      if (lastMouseDist >= 4000) {
+      const limit = this.firstHideOnInactivity ? 4000 : 500;
+      if (lastMouseDist >= limit) {
         this.hideOnInactivity = true;
+        this.firstHideOnInactivity = false;
       }
     });
   }
 
 
   mousewheelPan(e) {
-    if (!this.bookService.zoomLockEnabled) {
+    if (!this.bookService.zoomLockEnabled || this.view.getView().getResolution() >= this.initialResolution) {
       return
     }
     var event = e.originalEvent;
@@ -132,6 +139,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
       pinchRotate: false,
       mouseWheelZoom: false,
       doubleClickZoom: false,
+      dragPan: false
     });
     this.view = new ol.Map({
       target: 'app-viewer',
@@ -154,6 +162,67 @@ export class ViewerComponent implements OnInit, OnDestroy {
     this.selectionInteraction = new ol.interaction.DragBox({});
     this.mouseWheelZoomInteraction = new ol.interaction.MouseWheelZoom({});
     this.doubleClickZoomInteraction = new ol.interaction.DoubleClickZoom({});
+    this.dragPanInteraction = new ol.interaction.DragPan({});
+    
+    this.view.addInteraction(this.dragPanInteraction);
+    const wl = 60000;
+    this.dragPanInteraction.setActive(window.innerWidth > wl);
+
+    this.view.on('pointerdown', (e) => {
+      if (window.innerWidth > wl || this.view.getView().getResolution() != this.initialResolution) {
+        return;
+      }
+      this.lastTouchTime = new Date().getTime();
+      this.lastTouchX = e.pixel[0];
+    });
+
+    this.view.on('pointerup', (e) => {
+      if (!this.lastTouchTime || !this.lastTouchX || this.view.getView().getResolution() != this.initialResolution) {
+        return;
+      }
+      const deltaT = new Date().getTime() - this.lastTouchTime;
+      const deltaX = this.lastTouchX - e.pixel[0];
+      const deltaXabs = Math.abs(deltaX);
+      const width = this.view.getSize()[0];
+      const toLeft = deltaX < 0;
+      if (deltaT < 600 && (deltaXabs > width / 3.0 || deltaXabs > 160)) {
+        if (toLeft) {
+          this.bookService.goToPrevious();
+        } else {
+          this.bookService.goToNext();
+        }
+      } 
+    });
+
+    this.view.on('moveend', (e) => {
+      if (this.bookService.zoomLockEnabled || this.view.getView().getResolution() < this.initialResolution) {
+        this.dragPanInteraction.setActive(true);
+      } else {
+        this.dragPanInteraction.setActive(false);
+        if (this.initialResolution) {
+          // this.fitToScreen();
+          this.view.updateSize();
+          this.view.getView().fit(this.extent);
+        }
+      }
+    })
+  
+
+    
+    // this.view.on('moveend', (e) => {
+    //   if (this.bookService.doublePage || window.innerWidth > 600) {
+    //     return;
+    //   }
+    //   const xCenter = this.view.getView().getCenter()[0];
+    //   const width = this.extent[2]
+    //   if (xCenter == 0) {
+    //     this.bookService.goToPrevious();
+    //   } else if (width == xCenter) {
+    //     this.bookService.goToNext();
+    //   }
+    // });
+
+
     this.selectionInteraction.on('boxend', () => {
       this.view.removeInteraction(this.selectionInteraction);
       this.view.getViewport().style.cursor = '';
@@ -317,33 +386,52 @@ export class ViewerComponent implements OnInit, OnDestroy {
   }
 
   buildWatermarkLayer(config: any, userId: string) {
-    let style = null;
+    let style: any = null;
     if (config.type == "image") {
-      style = new ol.style.Style({
-        image: new ol.style.Icon({
-          src: config.logo,
-          scale: config.scale,
-          opacity: config.opacity,
-          crossOrigin: 'anonymous'
-        })
-      });
+      style = () => {
+        var zoom = this.view.getView().getResolution();
+        const size = -this.extent[1];
+        const m = 2000.0/size;
+        return [
+          new ol.style.Style({
+            image: new ol.style.Icon({
+              src: config.logo,
+              scale: config.scale / m / zoom,
+              opacity: config.opacity,
+              crossOrigin: 'anonymous'
+            })
+          })
+        ];
+      };
     } else {
-      const text = config.staticText || userId || config.defaultText || '';
-      const font = config.fontSize + 'px roboto,sans-serif';
-      style =  new ol.style.Style({
-        text: new ol.style.Text({
-          font: font,
-          text: text,
-          fill: new ol.style.Fill({
-            color:  config.color
-          }),
-          textAlign: 'left',
-        })
-      });
+      style = () => {
+        const text = config.staticText || userId || config.defaultText || '';
+        const size = -this.extent[1];
+        const m = 2000.0/size;
+        var zoom = this.view.getView().getResolution();
+        const font = `${config.fontSize}px roboto,sans-serif`;
+        const scale = 2.0 / m / zoom;
+        const color = config.color;
+        return [
+          new ol.style.Style({
+            text: new ol.style.Text({
+              font: font,
+              fill: new ol.style.Fill({ color: color }),
+              text: text,
+              scale: scale,
+              rotation: -Math.PI/4,
+              textAlign: 'center'
+            })
+          })
+        ];
+      };
+
     }
     this.watermark = new ol.layer.Vector({
       name: 'watermark',
       source: new ol.source.Vector(),
+      updateWhileInteracting: true,
+      updateWhileAnimating: true,
       style: style
     })
     this.watermark.setZIndex(100);
@@ -354,6 +442,9 @@ export class ViewerComponent implements OnInit, OnDestroy {
     if (this.watermark) {
       this.watermark.getSource().clear();
     }
+
+
+
     if (!this.bookService.licence || !this.licences.available(this.bookService.licence)) {
       return;
     }
@@ -365,6 +456,14 @@ export class ViewerComponent implements OnInit, OnDestroy {
       const userId = this.authService.getUserId() || this.authService.getUserName();
       this.buildWatermarkLayer(config, userId);
     }
+
+
+
+    // const config = this.settings.licences.dnnto.watermark;
+    // if (!this.watermark) {
+    //   const userId = "jan.rychtar@trinera.cz";
+    //   this.buildWatermarkLayer(config, userId);
+    // }
     let cw = config.colCount;
     const ch = config.rowCount;
     const sw = this.extent[0];
@@ -377,7 +476,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
     for (let i = 0; i < cw; i ++) {
      for (let j = 0; j < ch; j ++) {
        if (Math.floor((Math.random() * 100)) < p) {
-        const x = sw + (i/(cw*1.0))*width + width/cw/3;
+        const x = sw + (i/(cw*1.0))*width + width/cw/2;
         const y = (j/(ch*1.0)) * height + height/ch/2;// + height/30.0*i; + 70;
         var point = new ol.Feature(new ol.geom.Point([x, -y]));
         this.watermark.getSource().addFeature(point);
@@ -537,7 +636,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
     this.imageLoading = false;
     if (this.bookService.zoomLockEnabled && this.resolution) {
       this.view.getView().fit(this.extent);
-      const resolution =  this.view.getView().getResolution();
+      this.initialResolution = this.view.getView().getResolution();
       this.view.getView().setResolution(1);
       const size = this.view.getSize();
       let c = size[0]/2;
@@ -550,7 +649,9 @@ export class ViewerComponent implements OnInit, OnDestroy {
       this.view.getView().adjustResolution(this.resolution, [s, 0]);
     } else {
       this.view.getView().fit(this.extent);
+      this.initialResolution = this.view.getView().getResolution();
     }
+
     this.updateBoxes();
     this.addWaterMark();
   }
@@ -762,7 +863,7 @@ export class ViewerComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.bookService.clear();
+    // this.bookService.clear();
     if (this.viewerActionsSubscription) {
       this.viewerActionsSubscription.unsubscribe();
     }

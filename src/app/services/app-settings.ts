@@ -28,13 +28,21 @@ export class AppSettings {
   public iiifEnabled: boolean;
   public k3: string;
   public customRightMessage: boolean;
+  public ignorePolicyFlag: boolean;
   public originLink: boolean;
   public mapSearch: boolean;
+  public mapSearchType: string;
+  public mapSearchTypeDefault: string;
   public hiddenLocks: boolean;
+  public legacyLocks: boolean;
   public licences: any;
   public containsLicences: boolean;
+  public preselectedLicences: [string];
+
   public ga = APP_GLOBAL.ga;
   public gaCookieless = APP_GLOBAL.gaCookieless;
+  public ga4 = APP_GLOBAL.ga4;
+  public ga4clientId = APP_GLOBAL.ga4clientId;
   public matomo = APP_GLOBAL.matomo;
   public maxOmnibusParts: number;
   public maxOmnibusPages: number;
@@ -42,7 +50,8 @@ export class AppSettings {
   public yearFrom: number;
   public notice: string;
 
-  public keycloak: any;
+  public keycloak: boolean;
+  public georef: boolean;
   public termsPage : [string, string];
   public auth: any;
   public deployPath = APP_GLOBAL.deployPath || '';
@@ -67,7 +76,7 @@ export class AppSettings {
   public navbarLogoOnHome = !!APP_GLOBAL.navbarLogoOnHome;
 
 
-  public languages: string[] = APP_GLOBAL.languages || ['cs', 'en', 'de', 'sk'];
+  public languages: string[] = APP_GLOBAL.languages || ['cs', 'en', 'de', 'sk', 'sl'];
 
   public citationServiceUrl = APP_GLOBAL.citationServiceUrl || "https://citace.kramerius.cloud";
 
@@ -95,7 +104,9 @@ export class AppSettings {
       this.krameriusList.push(k);
     }
     this.multiKramerius = this.krameriusList.length > 1;
-    this.assignKrameriusByIndex(0);
+    if (!this.multiKramerius) {
+      this.assignKrameriusByIndex(0);
+    }
   }
 
   public assignKrameriusByCode(code: string): boolean {
@@ -141,16 +152,22 @@ export class AppSettings {
     this.k3 = kramerius.k3;
     this.originLink = kramerius.originLink;
     this.customRightMessage = kramerius.customRightMessage;
+    this.ignorePolicyFlag = !!kramerius.ignorePolicyFlag;
     this.mapSearch = !!kramerius.mapSearch;
+    this.mapSearchType = kramerius.mapSearchType || 'maps';
+    this.mapSearchTypeDefault = kramerius.mapSearchTypeDefault || (this.mapSearchType == 'markers' ? 'markers' : 'maps');
     this.licences = kramerius.licences;
     this.containsLicences = !!kramerius.containsLicences;
+    this.preselectedLicences = kramerius.preselectedLicences;
     this.hiddenLocks = !!kramerius.hiddenLocks;
     this.yearFrom = kramerius.yearFrom || 0;
     this.notice = kramerius.notice || '';
+    this.legacyLocks = !!kramerius.legacyLocks;
     this.maxOmnibusPages = kramerius.maxOmnibusPages || 0;
     this.maxOmnibusParts = kramerius.maxOmnibusParts || 0;
     this.adminClientUrl = kramerius.adminClientUrl;
-    this.keycloak = kramerius.keycloak;
+    this.keycloak = !!kramerius.keycloak;
+    this.georef = !!kramerius.georef;
     this.termsPage = kramerius.termsPage;
     this.auth = kramerius.auth;
     this.currentCode = this.code;
@@ -221,7 +238,11 @@ export class AppSettings {
   }
 
   public availableFilter(filter: string): boolean {
-    return this.filters.indexOf(filter) > -1;
+    return this.filters && this.filters.indexOf(filter) > -1;
+  }
+
+  public availableDoctype(doctype: string): boolean {
+    return this.doctypes && this.doctypes.indexOf(doctype) > -1;
   }
 
   public k5Compat(): boolean {
@@ -276,16 +297,22 @@ interface KrameriusData {
   licences: any;
   originLink: boolean;
   customRightMessage: boolean;
+  ignorePolicyFlag: boolean;
   mapSearch: boolean;
+  mapSearchType: string;
+  mapSearchTypeDefault: string;
   hiddenLocks: boolean;
+  legacyLocks: boolean;
   type: string;
   yearFrom: number;
   notice: string;
   maxOmnibusParts: number;
   maxOmnibusPages: number;
   keycloak: boolean;
+  georef: boolean;
   termsPage : [string, string];
   auth: any;
   adminClientUrl: string;
   containsLicences: boolean;
+  preselectedLicences: [string];
 }

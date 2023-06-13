@@ -10,26 +10,39 @@ export class LicenceService {
   licences: any;
 
   constructor(private translate: TranslateService, private settings: AppSettings) {
-    this.userLicences = ['_public'];
+    if (!this.settings.ignorePolicyFlag) {
+      this.userLicences = ['_public'];
+    }
     this.assignLicences(this.settings.licences);
     this.settings.kramerius$.subscribe(() =>  {
+      if (!this.settings.ignorePolicyFlag) {
+        this.userLicences = ['_public'];
+      } else {
+        this.userLicences = [];
+      }
       this.assignLicences(this.settings.licences);
     });
   }
 
   assignLicences(licences: any) {
       this.licences = licences || {};
-      this.licences['_public'] = {
-        access: 'open',
-        label: {
-          cs: 'Dokument je veřejně dostupný',
-          en: 'The document is publicly accessible'
+      if (!this.settings.ignorePolicyFlag) {
+        this.licences['_public'] = {
+          access: 'open',
+          label: {
+            cs: 'Dokument je veřejně dostupný',
+            en: 'The document is publicly accessible'
+          }
         }
       }
   }
 
   assignUserLicences(licences: string[]) {
-    this.userLicences = this.availableLicences(['_public'].concat(licences || []));
+    if (this.settings.ignorePolicyFlag) {
+      this.userLicences = this.availableLicences(licences || []);
+    } else {
+      this.userLicences = this.availableLicences(['_public'].concat(licences || []));
+    }
   }
 
   // 0 --- undefined
@@ -138,14 +151,16 @@ export class LicenceService {
     return !!this.userLicences && this.userLicences.length > 0;
   }
 
-  availableLicences(licences: string[]): string[] {
+  availableLicences(licences: string[], skipPrivate = false): string[] {
     if (!licences) {
       return [];
     }
     let result = [];
     for (const licence of licences) {
       if (this.available(licence) && result.indexOf(licence) < 0) {
-        result.push(licence);
+        if (!(skipPrivate && licence == '_private')) {
+          result.push(licence);
+        }
       }
     }
     return result;
@@ -187,12 +202,16 @@ export class LicenceService {
 
   buildLock(licences: string[]): any {
     if (!this.anyAvailableLicence(licences)) {
-      return {
-        icon: 'lock',
-        class: 'app-lock-licence-locked',
-        access: 'inaccessible',
-        tooltip: this.label('_private')
-      };
+      if (this.settings.ignorePolicyFlag) {
+        return null;
+      } else {
+        return {
+          icon: 'lock',
+          class: 'app-lock-licence-locked',
+          access: 'inaccessible',
+          tooltip: this.label('_private')
+        };
+      }
     } 
     const licence = this.appliedLicence(licences)
     if (licence) {
@@ -228,6 +247,16 @@ export class LicenceService {
     return lArray;
   }
 
+
+  anyAppliedLoginOrTerminlLicense(): boolean {
+    for (const license of this.userLicences) {
+      const access = this.access(license);
+      if (['login', 'terminal'].includes(access)) {
+        return true;
+      }
+    }  
+    return false;
+  }
 
 
   accessIcon(type: string, accessible: boolean): string {

@@ -1,0 +1,142 @@
+<div class="app-map-series">
+    <div class="app-map-series-header">
+
+        <div class="app-buttons">
+            <ng-container *ngIf="selectedSeries">
+                <div tabindex="0" [matTooltip]="'Zobrazit obsah'"  (click)="goToCollectionView()" class="app-view-button">
+                    <mat-icon>grid_view</mat-icon>
+                </div>
+            </ng-container>
+            <div tabindex="0" class="app-view-button app-active">
+                <mat-icon>map</mat-icon>
+            </div>
+        </div>
+
+
+        <div class="app-navigation">
+            <a [routerLink]="ms.getRootUrl()">Mapová díla</a>
+            <ng-container *ngIf="selectedSeries">
+                <span style="margin: 0 6px;">&gt;</span>
+                <div class="app-name" [matMenuTriggerFor]="seriesMenu">
+                    <span class="app-label">{{ selectedSeries.name }}</span>
+                    <mat-icon>arrow_drop_down</mat-icon>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+    <div class="app-map-wrapper">
+        <mat-icon style="top: 145px;" (click)="fitToScreen()" class="app-map-button">open_in_full</mat-icon>
+        <ng-container *ngIf="shapefile">
+            <mat-icon style="left: 64px; top: 145px;" *ngIf="toggleShapefile" (click)="toggleShapefile = !toggleShapefile" class="app-map-button">grid_on</mat-icon>
+            <mat-icon style="left: 64px; top: 145px;" *ngIf="!toggleShapefile" (click)="toggleShapefile = !toggleShapefile" class="app-map-button">grid_off</mat-icon>
+        </ng-container>
+
+        <google-map *ngIf="ms.mapReady" 
+                    #map
+                    [options]="ms.seriesOptions" 
+                    width="100%" 
+                    height="100%"
+                    (idle)="onIdle()">
+            <map-polygon
+                #somepolygon="mapPolygon"
+                *ngFor="let polygon of polygons" 
+                [paths]="polygon.position"
+                [options]="ms.polygon_options"
+                (polygonClick)="polygonClick(somepolygon, polygon)"
+                (polygonMouseover)="polygonMouseOver(somepolygon)"
+                (polygonMouseout)="polygonMouseOut(somepolygon)"
+                
+                >
+                </map-polygon>
+                <div *ngIf="toggleShapefile">
+                    <map-polygon
+                    #somepolygon="mapPolygon"
+                    *ngFor="let polygon of shapefile" 
+                    [paths]="polygon.position"
+                    [options]="ms.shapefile_options"
+                    >
+                    </map-polygon>
+                </div>
+                <div *ngIf="ms.zoom > zoomForMarkers">
+                    <map-marker
+                        #somemarker="mapMarker"
+                        *ngFor="let pol of polygonsInBounds" 
+                        [position]="pol.center"
+                        [label]="{text: pol.map_number, color: 'white', fontSize: '18px', fontWeight: 'lighter'}"
+                        [options]="ms.marker_options2"
+                        (mapClick)="openInfo(somemarker, pol)"
+                        >
+                    </map-marker>
+                </div>
+                <div *ngIf="neighbours.length > 0 && ms.zoom === polygonZoom ">
+                    <p>marker</p>
+                    <map-marker
+                    #somemarker="mapMarker"
+                    *ngFor="let n of neighbours" 
+                    [position]="n.markerPosition"
+                    [label]="{text: n.map_number, color: 'white', fontSize: '18px', fontWeight: 'lighter'}"
+                    [options]="ms.marker_options3"
+                    (mapClick)="openInfo(somemarker, n)"
+                    >
+                    </map-marker>  
+                </div>
+        </google-map>
+        <div class="app-selected" *ngIf="selectedPolygons && selectedPolygons.length > 0">
+            <div class="app-selected-list" *ngFor="let item of selectedPolygons">
+                <div class="app-selected-header">
+                    <div class="app-selected-list-number">{{item.map_number}}</div>
+                    <mat-icon class="app-selected-close" (click)="closeSelected()">close</mat-icon>
+                </div>
+                <a class="app-selected-maps" *ngFor="let m of chronoSort(item.maps)" href="{{settings.getRouteFor('uuid/' + m.pid)}}" target="_blank">
+                    <div class="app-selected-thumb" [style.background-image]="thumb(m.pid)">
+                        <!-- <div [matTooltip]="getLock(m).tooltip" class="app-lock {{ getLock(item).class }}" *ngIf="getLock(item)">
+                            <mat-icon>{{ getLock(item).icon }}</mat-icon>
+                        </div> -->
+                    </div>
+                    <div class="app-selected-title">
+                        {{m.title}}
+                    </div>
+                    <div class="app-selected-date">
+                        {{m.date}}
+                    </div>
+                    <div class="app-selected-shelf-locator">
+                        {{m.shelf_locators}}
+                    </div>
+                </a>
+            </div>
+        </div>
+        <!-- <div class="app-map-right-panel"> -->
+            <!-- <div class="app-map-shapefile" *ngIf="shapefile">
+                <mat-slide-toggle [(ngModel)]="toggleShapefile">Zobrazit shapefile</mat-slide-toggle>
+            </div> -->
+            <!-- <div class="app-map-list" *ngIf="selectedPolygons">
+                <div *ngFor="let item of selectedPolygons" class="app-list-item">
+                    <div class="app-map-polygon-header">
+                        <div class="app-map-polygon-number">{{item.map_number}}</div>
+                    </div>
+                    <a class="app-map-map" *ngFor="let m of item.maps" [href]="settings.getRouteFor('uuid/' + m.pid)" title="Odkaz do DK">
+                        <div class="app-map-pic">
+                            <img src="https://kramerius.mzk.cz/search/api/v5.0/item/{{m.pid}}/thumb">
+                        </div>
+                        <div class="app-map-info">
+                            <div class="app-map-title">{{m.title}}</div>
+                            <div class="app-map-date">{{m.date}}</div>
+                            <div class="app-map-shelf-locator">{{m.shelf_locators}}</div>
+                        </div>
+                    </a> 
+                </div>
+            </div> -->
+        <!-- </div> -->
+    </div>
+</div>
+
+
+
+<mat-menu #seriesMenu="matMenu" yPosition="below" xPosition="before" class="app-menu-series">
+    <ng-template matMenuContent ngFor>
+      <div class="app-dropdown-item2" mat-menu-item *ngFor="let serie of mapSeries" (click)="changeMapSeries(serie.pid)">
+        <div class="app-language">{{ serie.name }}</div>
+      </div>
+    </ng-template>
+</mat-menu>
+  

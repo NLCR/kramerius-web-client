@@ -1,10 +1,18 @@
 <div class="app-view-controls">
 
 
-  <mat-icon tabindex="0" (click)="goToPrevious()" [matTooltip]="'view_controls.tooltip_page_left' | translate" [class.app-inactive]="!hasPrevious()">chevron_left</mat-icon>
+  <mat-icon 
+    *ngIf="showPrevNextPage()" 
+    tabindex="0" 
+    (click)="goToPrevious()" 
+    [matTooltip]="'view_controls.tooltip_page_left' | translate" 
+    [class.app-inactive]="!hasPrevious()">
+    chevron_left
+  </mat-icon>
 
   <mat-icon (click)="controlsService.zoomIn();analytics.sendEvent('viewer', 'controls', 'zoom in');"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_zoom_in' | translate" 
             *ngIf="showZoom() && !showUnlock()">
             add_circle_outline
@@ -12,6 +20,7 @@
 
   <mat-icon (click)="controlsService.zoomOut();analytics.sendEvent('viewer', 'controls', 'zoom out');"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_zoom_out' | translate" 
             *ngIf="showZoom() && !showUnlock()">
             remove_circle_outline
@@ -19,48 +28,55 @@
 
   <mat-icon (click)="controlsService.fitToScreen();analytics.sendEvent('viewer', 'controls', 'fit to screen')"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_fit_to_screen' | translate"
             *ngIf="showFitToScreen() && !showUnlock()">
             fit_screen
   </mat-icon>
 
-  <mat-icon (click)="controlsService.enterFullscreen();analytics.sendEvent('viewer', 'controls', 'enter fullscreen')"
-            tabindex="0"
+  <mat-icon (click)="controlsService.enterFullscreen(bookService.showGeoreference ? 'geo_ol' : 'app-viewer');analytics.sendEvent('viewer', 'controls', 'enter fullscreen')"
             [matTooltip]="'view_controls.tooltip_enter_fullscreen' | translate" 
+            tabindex="0"
             *ngIf="controlsService.fullscreenAvailable && !controlsService.fullscreenEnabled() && !showUnlock()">
             fullscreen
   </mat-icon>
 
-  <mat-icon (click)="controlsService.exitFullscreen();analytics.sendEvent('viewer', 'controls', 'exit fullscreen');"
+  <mat-icon (click)="controlsService.exitFullscreen(bookService.showGeoreference ? 'geo_ol' :'app-viewer');analytics.sendEvent('viewer', 'controls', 'exit fullscreen');"
             tabindex="0"
             [matTooltip]="'view_controls.tooltip_exit_fullscreen' | translate" 
             *ngIf="controlsService.fullscreenAvailable && controlsService.fullscreenEnabled() && !showUnlock()">
             fullscreen_exit
   </mat-icon>
 
+
+
   <mat-icon (click)="controlsService.rotateRight();analytics.sendEvent('viewer', 'controls', 'rotate')"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_rotate_right' | translate" 
-            *ngIf="showRotation() && !showUnlock()">
+            *ngIf="showRotation() && !showUnlock() && !bookService.showGeoreference">
             rotate_right
   </mat-icon>
 
   <mat-icon (click)="bookService.toggleDoublePage();controlsService.doublePageOff();analytics.sendEvent('viewer', 'controls', 'double page off')"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_doublepage_off' | translate" 
-            *ngIf="showDoublePageOff() && !showUnlock()">
+            *ngIf="showDoublePageOff() && !showUnlock() && !bookService.showGeoreference">
             auto_stories
   </mat-icon>
 
   <mat-icon (click)="bookService.toggleDoublePage();controlsService.doublePageOn();analytics.sendEvent('viewer', 'controls', 'double page on')"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_doublepage_on' | translate" 
-            *ngIf="showDoublePageOn() && !showUnlock()">
+            *ngIf="showDoublePageOn() && !showUnlock() && !bookService.showGeoreference">
             auto_stories
   </mat-icon>
 
   <mat-icon (click)="controlsService.toggleLock();analytics.sendEvent('viewer', 'controls', 'lock')"
           tabindex="0"
+          class="hide-on-small"
           [matTooltip]="'view_controls.tooltip_zoom_lock_on' | translate" 
           *ngIf="showLock()">
           lock_open
@@ -68,6 +84,7 @@
 
   <mat-icon (click)="controlsService.toggleLock();analytics.sendEvent('viewer', 'controls', 'unlock')"
           tabindex="0"
+          class="hide-on-small"
           [matTooltip]="'view_controls.tooltip_zoom_lock_off' | translate" 
           *ngIf="showUnlock()">
           lock
@@ -75,6 +92,7 @@
 
   <mat-icon (click)="controlsService.selectText();analytics.sendEvent('viewer', 'controls', 'select text')"
             tabindex="0"
+            class="hide-on-small"
             [matTooltip]="'view_controls.tooltip_select_text' | translate"
             [class.app-inactive]="!selectTextEnabled()" 
             *ngIf="showSelectText()">
@@ -83,12 +101,45 @@
 
   <mat-icon (click)="onCropImageClicked()"
             tabindex="0"
-            [matTooltip]="'view_controls.tooltip_crop_image' | translate" 
+            class="hide-on-small"
+            [matTooltip]="'view_controls.' + (bookService.showGeoreference ? 'tooltip_cutline' : 'tooltip_crop_image') | translate" 
             [class.app-inactive]="!imageCropEnabled()"
             *ngIf="showImageCrop()">
             crop
   </mat-icon>
+  
+  <!-- <mat-icon (click)="hideWarpedLayer()"
+            [matTooltip]="'view_controls.tooltip_hidewarpedlayer' | translate" 
+            *ngIf="bookService.hasGeoreference && bookService.showGeoreference">
+            visibility
+  </mat-icon> -->
 
-  <mat-icon tabindex="0" (click)="goToNext()" [matTooltip]="'view_controls.tooltip_page_right' | translate" [class.app-inactive]="!hasNext()">chevron_right</mat-icon>
+  <mat-icon (click)="showGeoMap()"
+            [matTooltip]="'view_controls.tooltip_showgeoreferenced' | translate" 
+            *ngIf="bookService.hasGeoreference && !bookService.showGeoreference">
+            map
+  </mat-icon>
+
+  <mat-icon (click)="hideGeoMap()"
+            [matTooltip]="'view_controls.tooltip_hidegeoreferenced' | translate" 
+            *ngIf="bookService.hasGeoreference && bookService.showGeoreference">
+            image
+  </mat-icon>
+
+  <mat-slider *ngIf="bookService.hasGeoreference && bookService.showGeoreference" 
+            min="0" max="1" step=".1" [(ngModel)]="controlsService.geoLayerOpacity"
+             [matTooltip]="'view_controls.tooltip_opacity' | translate"
+            (change)="onChangeOpacity($event)">
+  </mat-slider>
+
+
+  <mat-icon 
+  *ngIf="showPrevNextPage()" 
+  tabindex="0" (click)="goToNext()" 
+  [matTooltip]="'view_controls.tooltip_page_right' | translate" 
+  [class.app-inactive]="!hasNext()">
+    chevron_right
+</mat-icon>
+
 
 </div>

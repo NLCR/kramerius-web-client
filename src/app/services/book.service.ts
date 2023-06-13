@@ -28,6 +28,7 @@ import { BasicDialogComponent } from '../dialog/basic-dialog/basic-dialog.compon
 import { OcrDialogComponent } from '../dialog/ocr-dialog/ocr-dialog.component';
 import { saveAs } from 'file-saver';
 import { PdfService } from './pdf.service';
+import { GeoreferenceService } from './georeference.service';
 
 @Injectable()
 export class BookService {
@@ -76,6 +77,10 @@ export class BookService {
     public licences: string[];
 
     public iiifEnabled = false;
+    public hasGeoreference = false;
+    public showGeoreference = false;
+    public geoUuid: string;
+    public geoData: any;
 
     public extraParents = [];
 
@@ -98,7 +103,8 @@ export class BookService {
         private router: Router,
         private pdf: PdfService,
         private bottomSheet: MatBottomSheet,
-        private licenceService: LicenceService) {
+        private licenceService: LicenceService,
+        private geoService: GeoreferenceService) {
     }
 
     init(params: BookParams) {
@@ -557,6 +563,9 @@ export class BookService {
         } else {
             this.activeNavigationTab = 'pages';
             if (this.fulltextQuery) {
+                if (this.viewer == 'none') {
+                    this.viewer = 'image';
+                }
                 this.fulltextChanged(this.fulltextQuery, params.pageUuid);
             } else {
                 this.goToPageOnIndex(pageIndex, true);
@@ -1122,6 +1131,8 @@ export class BookService {
                 this.subjectPages.next([page, rightPage]);
             }
         }
+        console.log('----analytics', 'page');
+        this.analytics.sendEvent('page', this.metadata.getShortTitleWithUnit(), pages);
     }
 
 
@@ -1250,8 +1261,13 @@ export class BookService {
             } else {
                 this.publishNewPages(BookPageState.Loading);
                 this.api.getChildren(article.uuid, this.source, false).subscribe(children => {
-                    if (children && children.length > 0) {
-                        article.firstPageUuid = children[0]['pid'];
+                    if (children) {
+                        for (const child of children) {
+                            if (child['model'] == 'page') {
+                                article.firstPageUuid = child['pid'];
+                                break;
+                            }
+                        }
                     }
                     this.pageState = BookPageState.Success;
                     this.goToPageWithUuid(article.firstPageUuid);
@@ -1361,6 +1377,8 @@ export class BookService {
     public getViewerData(): ViewerData {
         const data = new ViewerData();
         const leftPage = this.getPage();
+        // console.log('metadata', this.metadata);
+        // console.log('leftPage', leftPage);
         const rightPage = this.getRightPage();
         if (!leftPage || !leftPage.viewable()) {
             return null;
@@ -1375,6 +1393,23 @@ export class BookService {
         if (rightPage) {
             data.uuid2 = this.id(rightPage.uuid);
         }
+        if (this.settings.georef) {
+            const previouslyShowGeoreference = this.showGeoreference;
+            this.hasGeoreference = false;
+            this.showGeoreference = false;
+            // if (leftPage.type == 'map' || this.metadata.cartographicData.length > 0 && this.metadata.cartographicData[0].coordinates) {
+                this.geoService.getGeoreference(data.uuid1).subscribe((res: any) => {
+                    if (data.uuid1 == this.getPage().uuid) {
+                        if (previouslyShowGeoreference) {
+                            this.showGeoreference = true;
+                        }
+                        this.hasGeoreference = true;
+                        this.geoUuid = data.uuid1;
+                        this.geoData = res;
+                    }
+                });
+            // }
+         }
         return data;
     }
 
@@ -1400,6 +1435,8 @@ export class BookService {
         this.source = null;
         this.sources = [];
         this.iiifEnabled = false;
+        this.hasGeoreference = false;
+        this.showGeoreference = false;
     }
 
     private computeDoublePageBounds(pageCount: number, titlePage: number, lastSingle: number, firstBackSingle: number) {

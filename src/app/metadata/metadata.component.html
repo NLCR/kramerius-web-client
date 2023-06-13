@@ -75,7 +75,6 @@
       <div class="divider"></div>
 
     </ng-container>
-
     <ng-container *ngIf="bookService.source && controlsEnabled">
       <div class="app-label">
         {{ 'metadata.sources' | translate }}
@@ -87,9 +86,11 @@
       </div>
       <mat-menu #sourcesMenu="matMenu" class="app-libraries-menu">
         <ng-template matMenuContent ngFor>
-          <div class="app-dropdown-item" *ngFor="let source of bookService.sources" (click)="bookService.changeSource(source)">
+          <div class="app-dropdown-item" *ngFor="let source of bookService.sources">
+            <a [routerLink]="[settings.getRouteFor('view'), bookService.uuid]" [queryParams]="{source: source, fulltext: bookService.fulltextQuery }" (click)="analytics.sendEvent('metadata', 'change source', source);">
               <img [alt]="'source.' + source | translate" src='{{ "https://registr.digitalniknihovna.cz/libraries/" + source + "/logo" }}' class="app-library-icon" />
               <div class="app-library-name">{{ 'source.' + source | translate }} </div>
+            </a>
           </div>
         </ng-template>
       </mat-menu>
@@ -152,7 +153,7 @@
       <div class="app-label">{{ 'metadata.volume' | translate }}</div>
       <div class="app-value">{{ 'metadata.volume_year' | translate }} <strong>{{ metadata.volume.year }}</strong></div>
       <div class="app-value">{{ 'metadata.volume' | translate }} <strong>{{ metadata.volume.number }}</strong></div>
-      <div *ngIf="metadata.currentIssue">
+      <div *ngIf="metadata.currentIssue && (metadata.nextIssue || metadata.previousIssue)">
         <a [routerLink]="[settings.getRouteFor('periodical'), metadata.volume.uuid]" (click)="analytics.sendEvent('metadata', 'link', 'issue list');">
           {{ 'metadata.issue_list' | translate }}
         </a>
@@ -327,7 +328,17 @@
       <div class="app-label">{{ 'metadata.cartographic_data' | translate }}</div>
       <div *ngFor="let cd of metadata.cartographicData">
         <div class="app-value" *ngIf="cd.scale">{{ cd.scale }}</div>
+        <!-- <div class="app-value" *ngIf="cd.coordinates">
+          <div *ngIf="displayCoordinates(cd.coordinates).length < 2">
+            {{ displayCoordinates(cd.coordinates) }}
+          </div>
+          <div *ngIf="displayCoordinates(cd.coordinates).length > 1">
+            <div>{{ displayCoordinates(cd.coordinates)[0] }}</div>
+            <div>{{ displayCoordinates(cd.coordinates)[1] }}</div>
+          </div>
+        </div> -->
         <div class="app-value" *ngIf="cd.coordinates">{{ cd.coordinates }}</div>
+        <!-- <a *ngIf="cd.coordinates" [routerLink]="settings.getRouteFor('search')" [queryParams]="{north: parseBoundingBox(cd.coordinates).n, south: parseBoundingBox(cd.coordinates).s, west: parseBoundingBox(cd.coordinates).w, east: parseBoundingBox(cd.coordinates).e}" (click)="analytics.sendEvent('metadata', 'link', 'location');">{{ 'metadata.display_in_map' | translate }}</a> -->
       </div>
       <div class="divider"></div>
     </div>
