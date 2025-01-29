@@ -40,6 +40,8 @@ export class PdfDialogComponent implements OnInit {
 
   constructor(
             public dialogRef: MatDialogRef<PdfDialogComponent>,
+            public appSettings: AppSettings,
+            private http: HttpClient,
             private krameriusApi: KrameriusApiService,
             private krameriusInfo: KrameriusInfoService,
             private _sanitizer: DomSanitizer,
