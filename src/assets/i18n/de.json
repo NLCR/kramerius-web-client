@@ -34,7 +34,7 @@
       "not_logged_in": {
         "title": "",
         "message": "Lieber Leser,<br/><br/>um alle intelligenten Funktionen unserer digitalen Bibliothek, einschließlich Vorlesen, Übersetzungen und Zusammenfassungen, vollständig nutzen zu können, müssen Sie angemeldet sein.",
-        "action": "Anmelden" 
+        "action": "Anmelden"
       }
     },
     "share": {
@@ -80,12 +80,11 @@
         "other": "Andere Institutionen und Projekte"
       },
       "footer": {
-        "logo": "/assets/shared/sp/logo-mzk.png",
-        "contact": "Betreiber",
-        "contact_name": "Mährische Landesbibliothek in Brünn",
-        "contact_address1": "Kounicova 65a",
-        "contact_address2": "601 87 Brno",
-        "contact_address3": " "
+        "logo": "/assets/shared/sp/logo-nk.png",
+        "contact_name": "Nationalbibliothek der Tschechischen Republik",
+        "contact_address1": "Klementinum 190",
+        "contact_address2": "110 00 Praha 1",
+        "contact_address3": "Tschechische Republik"
       }
     },
     "navbar": {
@@ -281,7 +280,7 @@
         "geonames": "Einen geografischen Namen suchen"
       },
       "ordering": {
-        "label": "Ordnen",      
+        "label": "Ordnen",
         "occurrence": "Nach Anzahl",
         "alphabetical": "Alphabetisch"
       },
@@ -318,7 +317,7 @@
       "btn_enter": "Zur Bibliothek",
       "btn_search": "Suche",
       "tab_visited": "Besuchte",
-      "tab_recommended": "Empfehlungen",    
+      "tab_recommended": "Empfehlungen",
       "tab_latest": "Neueste",
       "select_library": "Bibliothek wählen",
       "public_filter": "nur öffentlich",
@@ -332,7 +331,7 @@
       "publisher": "Publikationsangaben",
       "keywords": "Schlagwörter",
       "languages": "Sprache",
-      "sources": "Quelle",      
+      "sources": "Quelle",
       "geonames": "Geografischer Name",
       "location": "Eigentümer (Original)",
       "abstract": "Abstract",
@@ -343,7 +342,7 @@
       "cartographic_data": "Kartographische Daten",
       "display_in_map": "Auf Karte anzeigen",
       "scale": "Maßstab",
-      "doctype": "Objektkategorie",    
+      "doctype": "Objektkategorie",
       "category": "Unterkategorie",
       "notes": "Anmerkungen",
       "genres": "Genre",
@@ -355,16 +354,16 @@
       "unit": "Teil",
       "page": "Seite",
       "volume_list": "Liste der Jahrgänge",
-      "previous_volume": "Vorheriger Jahrgang",   
+      "previous_volume": "Vorheriger Jahrgang",
       "next_volume": "Nachfolgender Jahrgang",
       "issue_date": "Erscheinungsdatum",
-      "previous_issue": "Vorherige Nummer",   
+      "previous_issue": "Vorherige Nummer",
       "issue_list": "Liste der Nummern",
       "next_issue": "Nachfolgende Nummer",
       "unit_number": "Teil",
       "unit_list": "Liste der Teile",
       "next_unit": "Nachfolgende Teil:",
-      "previous_unit": "Vorherige Teil",  
+      "previous_unit": "Vorherige Teil",
       "convolute_part_list": "Weiter zur Liste der Teile des Bandes",
       "shelf_locator": "Signatur: {{shelf_locator}}",
       "authors_info": "Mehr zu den Autoren",
@@ -397,7 +396,7 @@
       "periodicalitem": "Nummer {{part}}",
       "monographunit": "Teil {{part}}",
       "supplement": "Beilage {{part}}",
-      "previous_volume": "Vorheriger Jahrgang",   
+      "previous_volume": "Vorheriger Jahrgang",
       "next_volume": "Nachfolgender Jahrgang",
       "volume_list": "Liste der Jahrgänge",
       "search": {
@@ -497,7 +496,8 @@
       "warning_generate": "Die Erstellung eines PDF-Dokuments kann, je nach Anzahl der ausgewählten Seiten, mehrere Minuten dauern.",
       "error_generate": "PDF-Dokument konnte nicht heruntergeladen werden",
       "action_generate": "Als PDF herunterladen",
-      "action_prepare": "Zum Druck vorbereiten"
+      "action_prepare": "Zum Druck vorbereiten",
+      "download_pdf": "Laden Sie die gesamte Arbeit als PDF herunter"
     },
     "metadata-dialog": {
       "title": "Metadaten",
