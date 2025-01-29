@@ -1316,7 +1316,8 @@ export class BookService {
                 doublePage: this.doublePage,
                 pages: this.pages,
                 type: type,
-                name: this.metadata.getShortTitle()
+                name: this.metadata.getShortTitle(),
+                uuid: this.getUuid()
             };
             this.dialog.open(PdfDialogComponent, { data: opts, autoFocus: false });
         }

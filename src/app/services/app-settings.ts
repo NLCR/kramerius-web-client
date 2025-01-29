@@ -20,6 +20,7 @@ export class AppSettings {
   public logo: string;
   public logoHome: string;
   public url: string;
+  public pdfUrl: string;
   public downloadImg: string;
   public version: number;
   public code: string;
@@ -191,6 +192,7 @@ export class AppSettings {
     this.subtitle = kramerius.subtitle;
     this.subtitles = kramerius.subtitles;
     this.url = kramerius.url;
+    this.pdfUrl = kramerius.pdfUrl;
     this.downloadImg = kramerius.downloadImg;
     this.version = kramerius.version || 5;
     this.logo = kramerius.logo || 'assets/img/logo.png'
@@ -362,6 +364,7 @@ interface KrameriusData {
   logo: string;
   logoHome: string;
   url: string;
+  pdfUrl: string;
   downloadImg: string;
   version: number;
   richCollections: boolean;
