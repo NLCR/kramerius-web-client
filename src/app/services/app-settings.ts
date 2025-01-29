@@ -45,6 +45,7 @@ export class AppSettings {
   public licences: any;
   public containsLicences: boolean;
   public preselectedLicences: [string];
+  public notice: string;
 
   public ga4 = APP_GLOBAL.ga4;
   public ga4clientId = APP_GLOBAL.ga4clientId;
@@ -97,14 +98,14 @@ export class AppSettings {
   public maxIiifImageSize = APP_GLOBAL.maxIiifImageSize || 7000;
 
   public actions = {
-    'pdf': AppSettings.action('pdf', 'always'), 
-    'print': AppSettings.action('print', 'always'), 
-    'jpeg': AppSettings.action('jpeg', 'always'), 
-    'text': AppSettings.action('text', 'always'), 
-    'metadata': AppSettings.action('metadata', 'always'), 
-    'citation': AppSettings.action('citation', 'always'), 
-    'share': AppSettings.action('share', 'always'), 
-    'selection': AppSettings.action('selection', 'always'), 
+    'pdf': AppSettings.action('pdf', 'always'),
+    'print': AppSettings.action('print', 'always'),
+    'jpeg': AppSettings.action('jpeg', 'always'),
+    'text': AppSettings.action('text', 'always'),
+    'metadata': AppSettings.action('metadata', 'always'),
+    'citation': AppSettings.action('citation', 'always'),
+    'share': AppSettings.action('share', 'always'),
+    'selection': AppSettings.action('selection', 'always'),
     'crop': AppSettings.action('crop', 'always')
   }
 
@@ -212,6 +213,7 @@ export class AppSettings {
     this.licences = kramerius.licences;
     this.containsLicences = !!kramerius.containsLicences;
     this.preselectedLicences = kramerius.preselectedLicences;
+    this.notice = kramerius.notice || '';
     this.hiddenLocks = !!kramerius.hiddenLocks;
     this.legacyLocks = !!kramerius.legacyLocks;
     this.maxOmnibusPages = kramerius.maxOmnibusPages || 0;
@@ -250,11 +252,11 @@ export class AppSettings {
   public getRelativePath(): string {
     let path = window.location.pathname + window.location.search;
     if (path.startsWith('/')) {
-      path = path.substring(1);  
+      path = path.substring(1);
     }
     path = path.substring(this.deployPath.length);
     if (path.startsWith('/')) {
-      path = path.substring(1);  
+      path = path.substring(1);
     }
     if (this.multiKramerius) {
       path = path.substring(this.code.length);
@@ -392,5 +394,6 @@ interface KrameriusData {
   replaceImageUrl: string;
   containsLicences: boolean;
   preselectedLicences: [string];
+  notice: string;
   copyrightedText: string;
 }

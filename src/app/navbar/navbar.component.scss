@@ -1,5 +1,14 @@
 @import './src/variables.scss';
 
+#kramerius-notice {
+  text-align: center;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  padding: 10px;
+  color: $primary-color;
+}
+
 .app-navbar {
   position: relative;
   z-index: 995;
