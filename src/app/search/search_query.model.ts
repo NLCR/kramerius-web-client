@@ -43,7 +43,7 @@ export class SearchQuery {
 
     collection: string;
     folder: any;
-    folderItems: string[] = [];  
+    folderItems: string[] = [];
 
     constructor(settings: AppSettings) {
         this.settings = settings;
@@ -122,6 +122,9 @@ export class SearchQuery {
 
     private clearYearRange() {
         this.from = SearchQuery.YEAR_FROM;
+        if(this.settings.yearFrom) {
+            this.from = this.settings.yearFrom;
+        }
         this.to = SearchQuery.YEAR_TO;
     }
 
@@ -138,7 +141,7 @@ export class SearchQuery {
         this.west = west;
         this.east = east;
     }
-    
+
     public isBoundingBoxSet(): boolean {
         return this.north != null;
     }
@@ -205,7 +208,7 @@ export class SearchQuery {
             return this.rows * (this.page - 1);
         } else {
             return 60 * (this.page - 1);
-        }   
+        }
     }
 
     getRawQ() {
@@ -216,7 +219,7 @@ export class SearchQuery {
     }
 
     isYearRangeSet(): boolean {
-        return this.from !== SearchQuery.YEAR_FROM || this.to !== SearchQuery.YEAR_TO;
+        return (this.from !== SearchQuery.YEAR_FROM && this.from !== this.settings.yearFrom) || this.to !== SearchQuery.YEAR_TO;
     }
 
 
@@ -237,7 +240,7 @@ export class SearchQuery {
         this.value = null;
     }
 
-    
+
     getChangeLibraryUrlParams() {
         const params = {};
         if (['public', 'private', 'accessible'].indexOf(this.accessibility) >= 0) {
@@ -472,5 +475,3 @@ export class SearchQuery {
     }
 
 }
-
-

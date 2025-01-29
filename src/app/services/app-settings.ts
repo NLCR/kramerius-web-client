@@ -45,6 +45,7 @@ export class AppSettings {
   public licences: any;
   public containsLicences: boolean;
   public preselectedLicences: [string];
+  public yearFrom: number;
   public notice: string;
 
   public ga4 = APP_GLOBAL.ga4;
@@ -213,6 +214,7 @@ export class AppSettings {
     this.licences = kramerius.licences;
     this.containsLicences = !!kramerius.containsLicences;
     this.preselectedLicences = kramerius.preselectedLicences;
+    this.yearFrom = kramerius.yearFrom || 0;
     this.notice = kramerius.notice || '';
     this.hiddenLocks = !!kramerius.hiddenLocks;
     this.legacyLocks = !!kramerius.legacyLocks;
@@ -394,6 +396,7 @@ interface KrameriusData {
   replaceImageUrl: string;
   containsLicences: boolean;
   preselectedLicences: [string];
+  yearFrom: number;
   notice: string;
   copyrightedText: string;
 }
