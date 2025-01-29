@@ -34,7 +34,7 @@ export class MetadataComponent implements OnInit {
   }
   @Input() metadata: Metadata;
   expandedTitle = false;
-  @ViewChild(MatMenuTrigger,{static:false}) menu: MatMenuTrigger; 
+  @ViewChild(MatMenuTrigger,{static:false}) menu: MatMenuTrigger;
 
   expand = {}
   allDoctypes;
@@ -95,7 +95,7 @@ export class MetadataComponent implements OnInit {
     console.log('changeUuid', type, uuid);
   }
   changeUuid2() {
-    // this.selectedItem = 
+    // this.selectedItem =
     // this.selectedUuid = uuid;
     // this.selectedType = type;
     console.log('changeUuid', this.selectedItem, this.selectedType, this.selectedUuid);
@@ -167,7 +167,7 @@ export class MetadataComponent implements OnInit {
     let opts = { metadata: this.metadata };
     this.dialog.open(ShareDialogComponent, { data: opts, autoFocus: false });
   }
-  
+
   onLike(folder: Folder, uuid: string) {
     this.folderService.like(folder, uuid);
     this.openSnackBar(folder.name);
@@ -201,9 +201,9 @@ export class MetadataComponent implements OnInit {
       } else if (l == 2) {
         return false;
       }
-    }    
+    }
     const value = this.settings.actions[action];
-    return value === 'always' || (value === 'public' && this.metadata.isPublic);
+    return value === 'always' || (value=="available" && !this.bookService.isPageInaccessible()) || (value === 'public' && this.metadata.isPublic);
   }
 
   actionAvailable(action: string): boolean {
