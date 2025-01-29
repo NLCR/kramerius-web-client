@@ -20,6 +20,9 @@
     <app-navbar-search-bar *ngIf="!state.atHome()" [class.app-search-bar-show]="mobileSearchBarExpanded"></app-navbar-search-bar>
     <nav class="app-buttons">
       <ul>
+      	<li class="app-navbar-item">
+          <a (click)="analytics.sendEvent('navbar', 'browse');" [routerLink]="appSettings.getRouteFor('browse')">{{ 'navbar.browse' | translate }}</a>
+        </li>
         <li class="app-navbar-item">
           <ng-container *ngIf="appSettings.k5Compat(); else newCollections">
             <a (click)="analytics.sendEvent('navbar', 'collections');" *ngIf="!appSettings.richCollections" [routerLink]="appSettings.getRouteFor('browse')" [queryParams]="{category: 'collections'}">{{ 'navbar.collections' | translate }}</a>
@@ -28,9 +31,6 @@
           <ng-template #newCollections>
             <a *ngIf="appSettings.availableDoctype('collection')" (click)="analytics.sendEvent('navbar', 'collections');" [routerLink]="appSettings.getRouteFor('search')" [queryParams]="{doctypes: 'collection'}">{{ 'navbar.collections' | translate }}</a>
           </ng-template>
-        </li>
-        <li class="app-navbar-item">
-          <a (click)="analytics.sendEvent('navbar', 'browse');" [routerLink]="appSettings.getRouteFor('browse')">{{ 'navbar.browse' | translate }}</a>
         </li>
         <li class="app-navbar-item" *ngIf="appSettings.aboutPage">
           <a (click)="analytics.sendEvent('navbar', 'about');" [routerLink]="appSettings.getRouteFor('about')">{{ 'navbar.about' | translate }}</a>
