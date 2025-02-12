@@ -461,6 +461,14 @@ export class ViewerComponent implements OnInit, OnDestroy {
     return this.ai.aiEnabled();
   }
 
+  testAiActionsEnabled(): boolean {
+    return this.ai.testActionsEnabled();
+  }
+
+  alphaTestAiActionsEnabled(): boolean {
+    return this.ai.alphaTestActionsEnabled();
+  }
+
   showPageActions(): boolean {
     return !this.bookService.isPageLoading() && !this.imageLoading && this.bookService.pageAvailable && !this.bookService.serviceLoading && this.selectionState == 'off' && this.bookService.getPage() && !this.bookService.showGeoreference;
   }
@@ -475,6 +483,23 @@ export class ViewerComponent implements OnInit, OnDestroy {
 
   onSummarizeSelection() {
     this.bookService.summarize(this.selectionExtent, this.selectionWidth, this.selectionHeight, this.selectionRight);
+  }
+
+  onSimilaritySearchSelection() {
+    this.bookService.similaritySearch(this.selectionExtent, this.selectionWidth, this.selectionHeight, this.selectionRight);
+  }
+ 
+  similaritySearchAvailable(): boolean {
+    return this.ai.similaritySearchAvailable();
+  }
+
+  makariusEnabled(): boolean {
+    // http://localhost:4200/mzk/view/uuid:3883d473-e90d-425a-882c-fad4f3fbe29b?page=uuid:72aa4fd2-ecda-4fa4-aa25-e66b4c39a5e4
+    return this.settings.makarius && this.bookService.isSheetMusic();
+  }
+
+  onMakariusSimilaritySearch() {
+    this.bookService.musicSheetSimilaritySearch();
   }
 
   // onPageOcr() {
@@ -516,6 +541,20 @@ export class ViewerComponent implements OnInit, OnDestroy {
       return;
     }
     this.bookService.summarize();
+  }
+
+  onChatDoc() {
+    if (this.bookService.turnOffDoublePage()) {
+      return;
+    }
+    this.bookService.chatWithDoc();
+  }
+
+  onChatPage() {
+    if (this.bookService.turnOffDoublePage()) {
+      return;
+    }
+    this.bookService.chatWithPage();
   }
   
   onReadPage() {

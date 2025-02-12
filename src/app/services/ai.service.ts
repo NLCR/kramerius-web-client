@@ -11,9 +11,11 @@ import { Router } from '@angular/router';
 export class AiService {
 
   private baseUrl = 'https://api.trinera.cloud/api';
+  private embeddingModel = 'text-embedding-3-small';
 
   private temperature = 0;
-  private maxTokens = 1000;
+
+  private similaritySearchEnabled = localStorage.getItem('similaritySearchEnabled') === 'true';
 
   userSubscription: Subscription;
 
@@ -21,18 +23,19 @@ export class AiService {
   loggedIn = false;
 
   models = [ 
-    { provider: 'openai', name: 'GPT 3.5 turbo', code: 'gpt-3.5-turbo' },
     { provider: 'openai', name: 'GPT 4o', code: 'gpt-4o' },
     { provider: 'openai', name: 'GPT 4o mini', code: 'gpt-4o-mini' },
-    { provider: 'openai', name: 'GPT 4 turbo', code: 'gpt-4-turbo' },
-    { provider: 'openai', name: 'GPT 4', code: 'gpt-4' },
-    { provider: 'anthropic', name: 'Claude 3 Opus', code: 'claude-3-opus-20240229'},
-    { provider: 'anthropic', name: 'Claude 3 Sonnet', code: 'claude-3-sonnet-20240229'},
+    { provider: 'openai', name: 'GPT 4o FT summary', code: 'ft:gpt-4o-2024-08-06:trinera:summary-2:An2G3Xdx' },
+    { provider: 'openai', name: 'GPT 4o mini FT summary', code: 'ft:gpt-4o-mini-2024-07-18:trinera:summary-1:AmjXIzCx' },
     { provider: 'anthropic', name: 'Claude 3 Haiku', code: 'claude-3-haiku-20240307'},
-    { provider: 'anthropic', name: 'Claude 3.5 Sonnet', code: 'claude-3-5-sonnet-20240620'},
-    { provider: 'google', name: 'Gemini 1.0 Pro', code: 'gemini-1.0-pro'},
+    { provider: 'anthropic', name: 'Claude 3 Sonnet', code: 'claude-3-sonnet-20240229'},
+    { provider: 'anthropic', name: 'Claude 3 Opus', code: 'claude-3-opus-20240229'},
+    { provider: 'anthropic', name: 'Claude 3.5 Haiku', code: 'claude-3-5-haiku-20241022'},
+    { provider: 'anthropic', name: 'Claude 3.5 Sonnet', code: 'claude-3-5-sonnet-20241022'},
     { provider: 'google', name: 'Gemini 1.5 Pro', code: 'gemini-1.5-pro'},
-    { provider: 'google', name: 'Gemini 1.5 Flash', code: 'gemini-1.5-flash'}
+    { provider: 'google', name: 'Gemini 1.5 Flash', code: 'gemini-1.5-flash'},
+    { provider: 'google', name: 'Gemini 1.5 Flash 8B', code: 'gemini-1.5-flash-8b'},
+    { provider: 'google', name: 'Gemini 2.0 Flash Experimental', code: 'gemini-2.0-flash-exp'}
   ];
 
   constructor(
@@ -42,7 +45,7 @@ export class AiService {
     private router: Router,
     private http: HttpClient) {
       this.userSubscription = this.auth.watchUser().subscribe((user) => {
-        if ((user && user.isLoggedIn()) || this.settings.getAiToken()) {
+        if ((user && user.isLoggedIn() && this.settings.ai) || this.settings.getAiToken()) {
           this.loggedIn = true;
           this.reloadAIUser(null);
         } else {
@@ -50,7 +53,7 @@ export class AiService {
           this.roles = [];
         }
       });
-      if (this.auth.isLoggedIn() || this.settings.getAiToken()) {
+      if ((this.auth.isLoggedIn() && this.settings.ai) || this.settings.getAiToken()) {
         this.loggedIn = true;
         this.reloadAIUser(null);
       }
@@ -91,6 +94,22 @@ export class AiService {
     return this.roles.includes('TESTER');
   }  
 
+  alphaTestActionsEnabled(): boolean {
+    return this.roles.includes('TEST_A');
+  }  
+
+  similaritySearchAvailable(): boolean {
+    return this.aiAvailable() && this.alphaTestActionsEnabled() && !!this.settings.similaritySearchIndex;
+  }
+
+  isSimilaritySearchEnabled(): boolean {
+    return this.similaritySearchAvailable() && this.similaritySearchEnabled;
+  }
+
+  toggleSimilarySearchEnabled() {
+    localStorage.setItem('similaritySearchEnabled', this.similaritySearchEnabled ? 'false' : 'true');
+  }
+  
   reloadAIUser(callback: (response: any) => void) {
     let token;
     if (this.settings.ai && this.auth.isLoggedIn()) {
@@ -171,7 +190,7 @@ export class AiService {
 
 
   getDefaultModel() {
-    return this.models[2];
+    return this.models[1];
   }
  
   detectLanguage(input: string, callback: (answer: string, error?: string) => void) {
@@ -197,16 +216,63 @@ export class AiService {
     }
   }
 
-  askLLM(input: string, instructions: string, provider: string | null, model: string | null, callback: (answer: string, error?: string) => void) {
+  askLLM(input: string, instructions: string, provider: string | null, model: string | null, callback: (answer: string, error?: string) => void, maxTokens: number = 1000) {
     provider = provider || 'openai';
     if (provider === 'openai') {
-      this.askGPT(input, instructions, model, callback);
+      this.askGPT(input, instructions, model, maxTokens, callback);
     } else if (provider === 'anthropic') {
-      this.askClaude(input, instructions, model, callback);
+      this.askClaude(input, instructions, model, maxTokens, callback);
     } else if (provider === 'google') {
-      this.askGemini(input, instructions, model, callback);
+      this.askGemini(input, instructions, model, maxTokens, callback);
     }
   }
+
+  getEmbedding(input: string, callback: (answer: number[], error?: string) => void) {
+    const path = '/openai/embeddings';
+    const body = {
+      input: input,
+      model: this.embeddingModel
+    };
+    this.post(path, body, (response: any) => {
+      const vector = response['data'][0]['embedding'];
+      callback(vector);
+    }, (error: string) => {
+      callback(null, error);
+    });
+  }
+
+  queryVector(vector: number[], topK: number, filter: any = {}, callback: (answer: number[], error?: string) => void) {
+    const path = `/pinecone/query/${this.settings.similaritySearchIndex}`;
+    const body = {
+      vector: vector,
+      topK: topK,
+      filter : filter,
+      include_metadata: true
+    };
+    this.post(path, body, (response: any) => {
+      callback(response);
+    }, (error: string) => {
+      callback(null, error);
+    });
+  }
+
+
+  findSimilarTexts(input: string, count: number, filter: any, callback: (answer: any[], error?: string) => void) {
+    this.getEmbedding(input, (vector, error) => {
+      if (error) {
+        callback(null, error);
+        return;
+      }
+      this.queryVector(vector, count, filter, (response, error) => {
+        if (error) {
+          callback(null, error);
+          return;
+        }
+        callback(response);
+      });
+    });
+  }
+
 
   showAiError(error: string) {
     this.dialog.open(BasicDialogComponent, { data: {
@@ -245,7 +311,7 @@ export class AiService {
     });
   }
 
-  private askGPT(input: string, instructions: string, model: string | null, callback: (answer: string, error?: string) => void) {
+  private askGPT(input: string, instructions: string, model: string | null, maxTokens: number, callback: (answer: string, error?: string) => void) {
     const path = `/openai/chat/completions`;
     let m = model || 'gpt-4o-mini'
     const body = {
@@ -261,7 +327,7 @@ export class AiService {
         }
       ],
       'temperature': this.temperature,
-      'max_tokens': this.maxTokens
+      'max_tokens': maxTokens
     };
     this.post(path, body, (response: any) => {
       console.log('respnse', response);
@@ -277,7 +343,7 @@ export class AiService {
     });
   }
 
-  private askClaude(input: string, instructions: string, model: string | null, callback: (answer: string, error?: string) => void) {
+  private askClaude(input: string, instructions: string, model: string | null, maxTokens: number, callback: (answer: string, error?: string) => void) {
     const path = `/anthropic/messages`;
     let m = model || 'claude-3-sonnet-20240229';
     const body = {
@@ -289,7 +355,7 @@ export class AiService {
         }
       ],
       'temperature': this.temperature,
-      'max_tokens': this.maxTokens
+      'max_tokens': maxTokens
     };
     this.post(path, body, (response: any) => {
       let answer = response['content'][0]['text'];
@@ -300,7 +366,7 @@ export class AiService {
   }
 
 
-  private askGemini(input: string, instructions: string, model: string | null, callback: (answer: string, error?: string) => void) {
+  private askGemini(input: string, instructions: string, model: string | null, maxTokens: number, callback: (answer: string, error?: string) => void) {
     const m = model || 'gemini-pro';
     const path = `/google/gemini/${model}`;
     const body = {
@@ -309,7 +375,7 @@ export class AiService {
           { 'text': `${instructions}\n\n${input}` }
         ]}
       ],
-      'generationConfig': { 'temperature' : this.temperature, 'maxOutputTokens': this.maxTokens }
+      'generationConfig': { 'temperature' : this.temperature, 'maxOutputTokens': maxTokens }
     }
     this.post(path, body, (response: any) => {
       let answer = response['candidates'][0]['content']['parts'][0]['text'];

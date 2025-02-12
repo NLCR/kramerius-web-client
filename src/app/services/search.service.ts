@@ -18,6 +18,7 @@ import { MapSeriesService } from './mapseries.service';
 import { Observable, Subject, forkJoin } from 'rxjs';
 import { FolderService } from './folder.service';
 import { Cutting } from '../model/cutting';
+import { AiService } from './ai.service';
 
 
 @Injectable()
@@ -72,7 +73,6 @@ export class SearchService {
 
     adminSelection: boolean;
     folder: any;
-    itemSelected: boolean;
 
     activeTab: string;
     displayTabs: boolean ;
@@ -87,6 +87,7 @@ export class SearchService {
         private analytics: AnalyticsService,
         private localStorageService: LocalStorageService,
         private api: KrameriusApiService,
+        private ai: AiService,
         private settings: AppSettings,
         private dialog: MatDialog,
         private folderService: FolderService) {
@@ -95,7 +96,6 @@ export class SearchService {
     public init(context, params) {
         this.folderName = null;
         this.adminSelection = false;
-        this.itemSelected = false;
         this.collection = null;
         this.collectionStructure = {};
         this.collectionStructureTree = [];
@@ -755,6 +755,52 @@ export class SearchService {
         if (this.query.getRawQ() || this.query.isCustomFieldSet()) {
             this.numberOfResults = this.solr.numberOfSearchResults(response);
             this.results = this.solr.searchResultItems(response, this.query);
+            const last = (this.query.page - 1) * 60 + this.results.length == this.numberOfResults;
+            if (last && this.ai.isSimilaritySearchEnabled()) {
+                console.log('should invoke semantic search', this.query.getRawQ())
+                let filter = {};
+                let yearFiler = 'year';
+                if (this.settings.code != 'knav') {
+                    yearFiler = 'year_end';
+                    filter = {
+                        'source': 'mzk'
+                    };
+                }
+                if (this.query.isYearRangeSet()) {
+                    filter[yearFiler] = {
+                        "$gte": this.query.from,
+                        "$lte": this.query.to
+                    }
+                };
+                this.ai.findSimilarTexts(this.query.getRawQ(), 60, filter, (result, error) => {
+                    if (error) {
+                        this.ai.showAiError(error);
+                    } else {
+                        for (const item of result['matches']) {
+                            const score = item['score'];
+                            // console.log('score', score);
+                            const m = item['metadata'];
+                            // console.log('metadata', m);
+                            let di = new DocumentItem();
+                            const uuid = m['page_uuid'] || m['uuid'];
+                            di.uuid = uuid;
+                            di.date = m['date'];
+                            di.title = m['root_title'];
+                            di.description = m['content'];
+                            di.doctype = 'chunk';
+                            di.public = true;
+                            if (m['source'] == 'mzk') {
+                                di.thumbnail = `https://api.kramerius.mzk.cz/search/iiif/${uuid}/${m.bb}/max/0/default.jpg`;
+                            } else {
+                                di.thumbnail = `https://kramerius.lib.cas.cz/search/api/v5.0/item/${uuid}/thumb`;
+                            }
+                            this.results.push(di);
+                            di.resolveUrl(this.settings.getPathPrefix());
+                            di.params = { 'bb': m['bb'] };
+                        }
+                    }
+                });
+            }
         } else {
             this.numberOfResults = this.solr.numberOfResults(response);
             this.results = this.solr.documentItems(response);
@@ -840,7 +886,7 @@ export class SearchService {
     for (const item of this.results) {
         item.selected = !allSelected;
     }
-    this.itemSelection();
+    // this.itemSelection();
   }
 
   openAdminActions() {
@@ -862,17 +908,8 @@ export class SearchService {
     this.adminSelection = !this.adminSelection;
   }
 
-  itemSelection() {
-    for (const item of this.results) {
-      if (item.selected) {
-        this.itemSelected = true;
-        break;
-      } else {
-        this.itemSelected = false;
-      }
-    }
+  itemSelected(): boolean {
+    return this.results.some(x => x.selected);
   }
-
-
 
 }

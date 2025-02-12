@@ -34,6 +34,9 @@ import { TranslateService } from '@ngx-translate/core';
 import { ShareDialogComponent } from '../dialog/share-dialog/share-dialog.component';
 import { AiService } from './ai.service';
 import { LLMDialogComponent } from '../dialog/llm-dialog/llm-dialog.component';
+import { SimilarityDialogComponent } from '../dialog/similarity-dialog/similarity-dialog.component';
+import { MakariusService } from './makarius.service';
+import { SheetmusicSimilarityDialogComponent } from '../dialog/sheetmusic-similarity-dialog/sheetmusic-similarity-dialog.component';
 
 @Injectable()
 export class BookService {
@@ -115,6 +118,7 @@ export class BookService {
         private localStorageService: LocalStorageService,
         private api: KrameriusApiService,
         private iiif: IiifService,
+        private makarius: MakariusService,
         private dialog: MatDialog,
         private logger: LoggerService,
         private history: HistoryService,
@@ -124,7 +128,6 @@ export class BookService {
         private licenceService: LicenceService,
         private tts: TtsService,
         private ai: AiService,
-        private translateSrvice: TranslateService,
         private geoService: GeoreferenceService) {
     }
 
@@ -861,7 +864,7 @@ export class BookService {
           }
         }
         const value = this.settings.actions[action];
-        return value === 'always' || (value === 'available' && this.pageAvailable) || (value === 'public' && !this.isPrivate);
+        return value === 'always' || (value === 'available' && this.pageAvailable) || (value === 'public' && this.licences && this.licences.includes('public'));
     }
 
     isActionAvailable(action: string): boolean {
@@ -962,6 +965,52 @@ export class BookService {
         }, false, extent, width, height);
     }
 
+    chatWithDoc(extent = null, width: number = null, height: number = null, right: boolean = null) {
+        if (!this.ai.checkAiActionsEnabled()) { return; }
+        this.serviceLoading = true
+        this.getAllAltoTexts(0, '', (text) => {
+            this.serviceLoading = false;
+            if (text) {
+                const data = {
+                    content: text,
+                    action: 'chat'
+                };
+                this.bottomSheet.open(LLMDialogComponent, { data: data });
+            }
+        });
+    }
+
+
+    chatWithPage(extent = null, width: number = null, height: number = null, right: boolean = null) {
+        if (!this.ai.checkAiActionsEnabled()) { return; }
+        this.serviceLoading = true
+        const uuid = right ? this.getRightPage().uuid : this.getPage().uuid;
+        this.getAltoText(uuid, (text) => {
+            this.serviceLoading = false;
+            if (text) {
+                const data = {
+                    content: text,
+                    action: 'chat'
+                };
+                this.bottomSheet.open(LLMDialogComponent, { data: data });
+            }
+        }, false, extent, width, height);
+    }
+
+    private getAllAltoTexts(index: number, text: string, callback: (text: string) => void) {
+        if (index >= this.pages.length) {
+            callback(text);
+            return;
+        }
+        const page = this.pages[index];
+        this.getAltoText(page.uuid, (t) => {
+            if (t) {
+                text += ' ' + t;
+            }
+            this.getAllAltoTexts(index + 1, text, callback);
+        }, false, null, null, null);
+    }
+
     private summarizeText(text: string, uuid: string) {
         const data = {
             content: text,
@@ -969,6 +1018,33 @@ export class BookService {
         };
         this.bottomSheet.open(LLMDialogComponent, { data: data });
     }
+
+    similaritySearch(extent = null, width: number = null, height: number = null, right: boolean = null) {
+        if (!this.ai.checkAiActionsEnabled()) { return; }
+        this.serviceLoading = true
+        const uuid = right ? this.getRightPage().uuid : this.getPage().uuid;
+        this.getAltoText(uuid, (text) => {
+            this.serviceLoading = false;
+            if (text) {
+                this.ai.findSimilarTexts(text, 60, {}, (result, error) => {
+                    if (error) {
+                        this.ai.showAiError(error);
+                    } else {
+                       this.dialog.open(SimilarityDialogComponent, { data: result , autoFocus: false });
+                    }
+                });
+            }
+        }, false, extent, width, height);
+    }
+
+    musicSheetSimilaritySearch() {
+        this.serviceLoading = true;
+        this.makarius.getSimilarPages(this.getPage().uuid).subscribe((result: any) => {
+            this.dialog.open(SheetmusicSimilarityDialogComponent, { data: result, autoFocus: false });
+            this.serviceLoading = false;
+        });
+    }
+
 
 
     showTextSelection(extent, width: number, height: number, right: boolean) {
@@ -1631,6 +1707,21 @@ export class BookService {
             this.metadata.licence = this.licence;
             this.metadata.licences = this.licences;
             ////
+            if (leftPage.lockHash) {
+                this.api.refreshLock(leftPage.lockHash).subscribe(() => {
+                    if (leftPage.imageType === PageImageType.None) {
+                        this.publishNewPages(BookPageState.Failure);
+                    } else if (leftPage.imageType === PageImageType.PDF) {
+                        this.onPdfPageSelected(leftPage, rightPage);
+                    } else {
+                        // this.publishNewPages(BookPageState.Loading);
+                        this.subject.next(this.getViewerData());
+                        this.subjectPages.next([leftPage, rightPage]);
+                    } 
+                });
+                return;
+            }
+
             if (leftPage.imageType === PageImageType.None) {
                 this.publishNewPages(BookPageState.Failure);
             } else if (leftPage.imageType === PageImageType.PDF) {
@@ -1761,7 +1852,12 @@ export class BookService {
                 });
             // }
          }
-        return data;
+    return data;
+    }
+
+    isSheetMusic(): boolean {
+        const page = this.getPage();
+        return !!page && page.type == 'sheetmusic';
     }
 
     clear() {

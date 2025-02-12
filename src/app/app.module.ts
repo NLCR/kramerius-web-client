@@ -184,6 +184,9 @@ import { AutocompleterModule } from './common/autocompleter/autocompleter.module
 import { ConfigService } from './services/config.service';
 import { SpeechRecognitionService } from './services/speech-recognition.service';
 import { UiService } from './services/ui.service';
+import { SimilarityDialogComponent } from './dialog/similarity-dialog/similarity-dialog.component';
+import { MakariusService } from './services/makarius.service';
+import { SheetmusicSimilarityDialogComponent } from './dialog/sheetmusic-similarity-dialog/sheetmusic-similarity-dialog.component';
 
 declare var APP_GLOBAL: any;
 
@@ -195,7 +198,7 @@ export function hljsLanguages() {
 }
 
 export function createTranslateLoader(http: HttpClient) {
-  return new TranslateHttpLoader(http, './assets/i18n/', '.json?v2.10.2');
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json?v2.10.5');
 }
 
 export function initializeApp(configService: ConfigService) {
@@ -321,7 +324,9 @@ export function appInitializerFactory(translate: TranslateService) {
     CuratorListsComponent,
     LicenceWindowComponent,
     CuttingCardComponent,
-    TtsDialogComponent
+    TtsDialogComponent,
+    SimilarityDialogComponent,
+    SheetmusicSimilarityDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -391,6 +396,7 @@ export function appInitializerFactory(translate: TranslateService) {
     EpubService,
     MapSeriesService,
     GeoreferenceService,
+    MakariusService,
     TtsService,
     AiService,
     CsvService,
