@@ -1,5 +1,5 @@
 <ng-container *ngIf="appSettings.notice">
-    <div id="kramerius-notice">{{ appSettings.notice }}</div>
+    <div id="kramerius-notice" [innerHTML]="appSettings.notice"></div>
 </ng-container>
 
 <div class="app-navbar">
