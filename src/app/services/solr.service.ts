@@ -930,13 +930,13 @@ export class SolrService {
             value = query.value;
             let fields = '';
             if (query.field == 'all') {
-                fields = ['title', 'author', 'keyword', 'geoname', 'signature', 'issn', 'isbn', 'fulltext'].map(f => this.getSolrCustomField(f, true)).join(' ');
+                fields = ['title', 'author', 'keyword', 'geoname', 'signature', 'genre', 'publication_place', 'publisher', 'issn', 'isbn', 'fulltext'].map(f => this.getSolrCustomField(f, true)).join(' ');
             } else {
                 fields = this.getSolrCustomField(query.field);
             }
             q += `_query_:"{!edismax qf=\'${fields}\' v=$q1}\"`;
         } else if (qString) {
-            q += `_query_:"{!edismax qf=\'${this.field('titles_search')}^10 ${this.field('authors_search')}^2 ${this.field('keywords_search')} ${this.field('text_ocr')}^0.1`;
+            q += `_query_:"{!edismax qf=\'${this.field('titles_search')}^10 ${this.field('authors_search')}^2 ${this.field('keywords_search')} ${this.field('publishers_search')} ${this.field('genres_search')} ${this.field('geonames_search')} ${this.field('text_ocr')}^0.1`;
             if (!this.settings.k5Compat()) {
                 q += ` ${this.field('isbn')}`; 
             }
@@ -957,13 +957,13 @@ export class SolrService {
             q += '&group.truncate=true';
             q += `&fl=${this.field('id')},${this.field('accessibility')},${this.field('model_path')},${this.field('authors')},${this.field('root_title')},${this.field('root_pid')},${this.field('title')},${this.field('date')},score`;
         } else {
-            q += `&fl=${this.field('id')},${this.field('accessibility')},${this.field('model')},${this.field('authors')},${this.field('titles')},${this.field('title')},${this.field('root_title')},${this.field('date')},title.search_*`;
+            q += `&fl=${this.field('id')},${this.field('accessibility')},${this.field('model')},${this.field('authors')},${this.field('titles')},${this.field('title')},${this.field('root_title')},${this.field('date')}`;
         }
         if (this.settings.filters.indexOf('sources') > -1) {
             q+= `,${this.field('cdk_sources')}`
         }
         if (!this.settings.k5Compat()) {
-            q += `,${this.field('collection_description')}, collection.desc_*`;
+            q += `,${this.field('collection_description')}, collection.desc_*, title.search_*`;
         } else if (this.settings.filters.indexOf('categories') >= 0) {
             q += `,${this.field('category')}`;
         }
@@ -2041,7 +2041,29 @@ export class SolrService {
             item.authors = doc[this.field('authors')];
             item.sources = doc[this.field('cdk_sources')];
             this.assignLicences(item, doc);
-            item.description = doc[this.field('collection_description')];
+            // item.description = doc[this.field('collection_description')];
+            if (item.doctype == 'collection') {
+                let languages = {'cze':'cs',
+                                 'eng':'en',
+                                 'ger':'de',
+                                 'slo':'sk',
+                                 'slv':'sl',
+                                 'por':'pt'};
+                let localTitles = {};
+                for (const key in languages) {
+                    if (doc['title.search_' + key]) {
+                        localTitles[languages[key]] = doc['title.search_' + key][0];
+                    }
+                }
+                item.localTitles = localTitles;
+                let localDescriptions = {};
+                for (const key in languages) {
+                    if (doc['collection.desc_' + key]) {
+                        localDescriptions[languages[key]] = doc['collection.desc_' + key][0];
+                    }
+                }  
+                item.localDescriptions = localDescriptions;                     
+            }
             item.geonames = doc[this.field('geonames_facet')] || [];
             if (this.settings.k5Compat()) {
                 this.parseLocationOld(doc[this.field('coords_location')], item);
@@ -2120,6 +2142,12 @@ export class SolrService {
             return this.field('issn');
         } else if (field === 'isbn') {
             return this.field('isbn');
+        } else if (field === 'genre') {
+            return this.field('genres_search');
+        } else if (field === 'publication_place') {
+            return this.field('publication_places_search');
+        } else if (field === 'publisher') {
+            return this.field('publishers_search');
         } else if (field === 'fulltext') {
             return this.field('text_ocr') + (boost ? '^0.1' : '');
         } else if (field === 'all') {

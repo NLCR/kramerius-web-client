@@ -244,6 +244,9 @@
       "ddt": "DDC",
       "mdt": "UDC",
       "geoname": "Geografinis pavadinimas",
+      "genre": "Žanras",
+      "publisher": "Leidėjas",
+      "publication_place": "Leidimo vieta",
       "search": "Paieška"
     },
     "query": {
@@ -458,7 +461,8 @@
     "read_pause": "Pristabdyti skaitymą",
     "read_resume": "Skaityti toliau",
     "read_stop": "Nustokite skaityti",
-    "read_next": "Pereiti prie kito"
+    "read_next": "Pereiti prie kito",
+    "cancel_translation": "Atšaukti vertimą"
   },
   "book_controls": {
     "tooltip_print": "Pasiruoškite spausdinti",
@@ -1089,7 +1093,14 @@
     "ULC003": "National Institute for the Protection and Conservation of Monuments and Sites - Ústí nad Labem",
     "ZNE450": "Dominican Library in Znojmo",
     "ABD186": "Charles University - Faculty of Humanities",
-    "TAE803": "The castle library of Bechyně"
+    "TAE803": "The castle library of Bechyně",
+    "PNE801": "Museum of the Northern Pilsen Region at Marianska Tynice",
+    "TCE001": "Museum in Tachov",
+    "DOE301": "Museum of Chodsko Region in Domazlice",
+    "PNE802": "Museum of Southern Pilsen Region at Blovice",
+    "KTE301": "Regional Museum of Sumava in Susice",
+    "KTE001": "Dr. Hostas Historical and Geographical Museum in Klatovy",
+    "PNE307": "West Bohemian Gallery in Pilsen"
   },
   "language" : {
     "aar": "Afar",

@@ -244,6 +244,9 @@
       "ddt": "DDC",
       "mdt": "UDC",
       "geoname": "地理名称",
+      "genre": "类型",
+      "publisher": "出版商",
+      "publication_place": "出版地",
       "search": "搜索"
     },
     "query": {
@@ -458,7 +461,8 @@
     "read_pause": "暂停阅读",
     "read_resume": "继续阅读",
     "read_stop": "停止阅读",
-    "read_next": "跳至下一个"
+    "read_next": "跳至下一个",
+    "cancel_translation": "取消翻译"
   },
   "book_controls": {
     "tooltip_print": "准备打印",
@@ -1089,7 +1093,14 @@
     "ULC003": "National Institute for the Protection and Conservation of Monuments and Sites - Ústí nad Labem",
     "ZNE450": "Dominican Library in Znojmo",
     "ABD186": "Charles University - Faculty of Humanities",
-    "TAE803": "The castle library of Bechyně"
+    "TAE803": "The castle library of Bechyně",
+    "PNE801": "Museum of the Northern Pilsen Region at Marianska Tynice",
+    "TCE001": "Museum in Tachov",
+    "DOE301": "Museum of Chodsko Region in Domazlice",
+    "PNE802": "Museum of Southern Pilsen Region at Blovice",
+    "KTE301": "Regional Museum of Sumava in Susice",
+    "KTE001": "Dr. Hostas Historical and Geographical Museum in Klatovy",
+    "PNE307": "West Bohemian Gallery in Pilsen"
   },
   "language" : {
     "aar": "Afar",

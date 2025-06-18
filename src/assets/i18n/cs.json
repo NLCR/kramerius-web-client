@@ -244,6 +244,9 @@
       "ddt": "DDT",
       "mdt": "MDT",
       "geoname": "Geografický název",
+      "genre": "Žánr",
+      "publisher": "Nakladatel",
+      "publication_place": "Místo vydání", 
       "search": "Vyhledat"
     },
     "query": {
@@ -458,7 +461,8 @@
     "read_pause": "Pozastavit čtení",
     "read_resume": "Pokračovat v čtení",
     "read_stop": "Zastavit čtení",
-    "read_next": "Přeskočit na další"
+    "read_next": "Přeskočit na další",
+    "cancel_translation": "Zrušit překlad"
   },
   "book_controls": {
     "tooltip_print": "Příprava k tisku",
@@ -1090,7 +1094,14 @@
     "ULC003": "Národní památkový ústav - Územní odborné pracoviště v Ústí nad Labem",
     "ZNE450": "Klášter Dominikánů Znojmo",
     "ABD186": "Univerzita Karlova - Fakulta humanitních studií",
-    "TAE803": "Zámecká knihovna Bechyně"
+    "TAE803": "Zámecká knihovna Bechyně",
+    "PNE801": "Muzeum a galerie severního Plzeňska v Mariánské Týnici",
+    "TCE001": "Muzeum Českého lesa v Tachově",
+    "DOE301": "Muzeum Chodska v Domažlicích",
+    "PNE802": "Muzeum jižního Plzeňska v Blovicích",
+    "KTE301": "Muzeum Šumavy Sušice",
+    "KTE001": "Vlastivědné muzeum Dr. Hostaše v Klatovech",
+    "PNE307": "Západočeská galerie v Plzni"
   },
   "language" : {
     "aar": "afarština",

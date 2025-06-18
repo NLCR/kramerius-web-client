@@ -244,6 +244,9 @@
       "ddt": "DDC",
       "mdt": "UDC",
       "geoname": "Földrajzi név",
+      "genre": "Műfaj",
+      "publisher": "Kiadó",
+      "publication_place": "Kiadvány helye",
       "search": "Keresés"
     },
     "query": {
@@ -458,7 +461,8 @@
     "read_pause": "Az olvasás szüneteltetése",
     "read_resume": "olvasson tovább",
     "read_stop": "Hagyd abba az olvasást",
-    "read_next": "Ugrás a következőre"
+    "read_next": "Ugrás a következőre",
+    "cancel_translation": "Fordítás törlése"
   },
   "book_controls": {
     "tooltip_print": "Készüljön fel a nyomtatásra",
@@ -1089,7 +1093,14 @@
     "ULC003": "National Institute for the Protection and Conservation of Monuments and Sites - Ústí nad Labem",
     "ZNE450": "Dominican Library in Znojmo",
     "ABD186": "Charles University - Faculty of Humanities",
-    "TAE803": "The castle library of Bechyně"
+    "TAE803": "The castle library of Bechyně",
+    "PNE801": "Museum of the Northern Pilsen Region at Marianska Tynice",
+    "TCE001": "Museum in Tachov",
+    "DOE301": "Museum of Chodsko Region in Domazlice",
+    "PNE802": "Museum of Southern Pilsen Region at Blovice",
+    "KTE301": "Regional Museum of Sumava in Susice",
+    "KTE001": "Dr. Hostas Historical and Geographical Museum in Klatovy",
+    "PNE307": "West Bohemian Gallery in Pilsen"
   },
   "language" : {
     "aar": "Afar",

@@ -6,6 +6,9 @@
         </li>
     </ul>
 </div>
+
+<app-banner></app-banner>
+
 <div class="app-curlist-wrapper" *ngIf="settings.curatorListsEnabled">
     <div *ngFor="let list of curatorLists">
         <div class="app-curlist-title-wrapper">
@@ -15,7 +18,7 @@
         <!-- KARTY NA VYSKU -->
         <ul class="app-curlist-content" *ngIf="list.items && verticalCards && !isExpanded(list)">
             <li *ngFor="let item of list.items.slice(0, [shownItems]); let last = last">
-                <a [routerLink]="item.url" class="app-curlist-item" *ngIf="!last">
+                <a [routerLink]="item.url" class="app-curlist-item" *ngIf="!last" (click)="onOpenItem(list, item)">
                     <div class="app-item-thumb" [style.background-image]="thumb(item.uuid)"></div>
                     <div class="app-item-title">{{ getTitle(item) }}</div>
                 </a>
@@ -28,7 +31,7 @@
         </ul>
         <ul class="app-curlist-content app-curlist-expanded" *ngIf="list.items && verticalCards && isExpanded(list)">
             <li *ngFor="let item of list.items">
-                <a [routerLink]="item.url" class="app-curlist-item">
+                <a [routerLink]="item.url" class="app-curlist-item" (click)="onOpenItem(list, item)">
                     <div class="app-item-thumb" [style.background-image]="thumb(item.uuid)"></div>
                     <div class="app-item-title">{{ getTitle(item) }}</div>
                 </a>

@@ -244,6 +244,9 @@
       "ddt": "DDC",
       "mdt": "UDC",
       "geoname": "Geographic name",
+      "genre": "Genre",
+      "publisher": "Publisher",
+      "publication_place": "Place of Publication",
       "search": "Search"
     },
     "query": {
@@ -356,18 +359,18 @@
     "issue": "Issue",
     "unit": "Part",
     "page": "Page",
-    "volume_list": "Volume list",
-    "previous_volume": "Previous volume",
+    "volume_list": "Open periodical",
+    "previous_volume": "Previous volume",   
     "next_volume": "Next volume",
     "issue_date": "Date of publication",
-    "previous_issue": "Previous issue",
-    "issue_list": "Issue list",
-    "next_issue": "Next issue",
+    "previous_issue": "Previous issue",   
+    "issue_list": "Open periodical volume",
+    "next_issue": "Next issue",  
     "unit_number": "Number",
-    "unit_list": "Part list",
+    "unit_list": "Open book bundle",
     "next_unit": "Next part:",
-    "previous_unit": "Previous part:",
-    "convolute_part_list": "Konvolut parts",
+    "previous_unit": "Previous part:",  
+    "convolute_part_list": "Open konvolut",     
     "shelf_locator": "Shelf/Call number: {{shelf_locator}}",
     "authors_info": "More about authors",
     "donator": "Supported by",
@@ -408,7 +411,7 @@
       "periodical": "Search in periodical",
       "periodicalvolume": "Search in volume",
       "convolute": "Search in convolute",
-      "monograph": "Search in monograph bundle"
+      "monograph": "Search in book bundle"
     },
     "ordering": {
       "relevance": "Relevance",
@@ -458,7 +461,8 @@
     "read_pause": "Pause reading",
     "read_resume": "Continue reading",
     "read_stop": "Stop reading",
-    "read_next": "Skip to next"
+    "read_next": "Skip to next",
+    "cancel_translation": "Cancel translation"
   },
   "book_controls": {
     "tooltip_print": "Prepare to print",
@@ -1090,7 +1094,14 @@
     "ULC003": "National Institute for the Protection and Conservation of Monuments and Sites - Ústí nad Labem",
     "ZNE450": "Dominican Library in Znojmo",
     "ABD186": "Charles University - Faculty of Humanities",
-    "TAE803": "The castle library of Bechyně"
+    "TAE803": "The castle library of Bechyně",
+    "PNE801": "Museum of the Northern Pilsen Region at Marianska Tynice",
+    "TCE001": "Museum in Tachov",
+    "DOE301": "Museum of Chodsko Region in Domazlice",
+    "PNE802": "Museum of Southern Pilsen Region at Blovice",
+    "KTE301": "Regional Museum of Sumava in Susice",
+    "KTE001": "Dr. Hostas Historical and Geographical Museum in Klatovy",
+    "PNE307": "West Bohemian Gallery in Pilsen"
   },
   "language" : {
     "aar": "Afar",

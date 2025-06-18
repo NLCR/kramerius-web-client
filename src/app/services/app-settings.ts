@@ -92,6 +92,9 @@ export class AppSettings {
   public cookiebar = !!APP_GLOBAL.cookiebar;
   public navbarLogoOnHome = !!APP_GLOBAL.navbarLogoOnHome;
 
+  public formBanner = !!APP_GLOBAL.formBanner;
+  public formBannerUrl = APP_GLOBAL.formBannerUrl || 'https://forms.gle/q91VPGP7KzYAy17Q9';
+
   public defaultLanguage: string = APP_GLOBAL.defaultLanguage || 'cs';
   public docsNav = !!APP_GLOBAL.docsNav;
   public languages: string[] = APP_GLOBAL.languages || ['cs', 'en', 'de', 'sk', 'sl'];
