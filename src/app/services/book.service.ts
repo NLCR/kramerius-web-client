@@ -864,7 +864,7 @@ export class BookService {
           }
         }
         const value = this.settings.actions[action];
-        return value === 'always' || (value === 'available' && this.pageAvailable) || (value === 'public' && this.licences && this.licences.includes('public'));
+        return value === 'always' || (value === 'available' && this.pageAvailable) || (value === 'public' && this.licences && this.licences.includes('public')) || (value === 'public' && !this.isPrivate);;
     }
 
     isActionAvailable(action: string): boolean {
@@ -1726,7 +1726,7 @@ export class BookService {
                         // this.publishNewPages(BookPageState.Loading);
                         this.subject.next(this.getViewerData());
                         this.subjectPages.next([leftPage, rightPage]);
-                    } 
+                    }
                 });
                 return;
             }
